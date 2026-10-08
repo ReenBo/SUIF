@@ -1,0 +1,30 @@
+:root {
+    /* Colors - Premium Dark Mode */
+    --fw-color-bg: #121212;
+    --fw-color-bg-panel: #1E1E1E;
+    --fw-color-primary: #6366F1; /* Modern Indigo */
+    --fw-color-primary-hover: #818CF8;
+    --fw-color-primary-active: #4F46E5;
+    
+    --fw-color-text: #F9FAFB;
+    --fw-color-text-muted: #9CA3AF;
+    --fw-color-border: #374151;
+
+    /* Geometry */
+    --fw-radius-small: 6px;
+    --fw-radius-base: 12px;
+    --fw-radius-large: 24px;
+    
+    --fw-spacing-xs: 4px;
+    --fw-spacing-small: 8px;
+    --fw-spacing-medium: 16px;
+    --fw-spacing-large: 24px;
+    --fw-spacing-xl: 48px;
+
+    /* Typography */
+    /* --fw-font-main: url('project://database/Assets/Fonts/Inter-Regular.ttf'); */
+
+    /* Animation Timings */
+    --fw-duration-fast: 0.15s;
+    --fw-duration-normal: 0.3s;
+}

@@ -1,0 +1,32 @@
+.is-hidden {
+    display: none !important;
+}
+
+.is-disabled {
+    opacity: 0.5 !important;
+}
+
+.fw-btn.is-active {
+    border-color: #ffffff;
+    border-width: 2px;
+}
+
+.fw-modal-blocker {
+    background-color: rgba(0, 0, 0, 0.6);
+    transition: opacity 0.2s;
+}
+.fw-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    transition: opacity 0.2s;
+}
+
+.is-inactive {
+    opacity: 0.8;
+}
+
+.is-active {
+    opacity: 1;
+}

@@ -1,0 +1,22 @@
+.fw-text-h1 {
+    font-size: 48px;
+    -unity-font-style: bold;
+    margin-bottom: 24px;
+}
+
+.fw-text-h2 {
+    font-size: 32px;
+    -unity-font-style: bold;
+    margin-bottom: 16px;
+}
+
+.fw-text-body {
+    font-size: 20px;
+    -unity-font-style: normal;
+}
+
+.fw-text-caption {
+    font-size: 14px;
+    -unity-font-style: italic;
+    color: rgba(255, 255, 255, 0.7);
+}

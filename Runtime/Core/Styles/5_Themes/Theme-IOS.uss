@@ -1,0 +1,7 @@
+.theme-ios {
+    --fw-color-bg: #f2f2f7;
+    --fw-color-primary: #007aff;
+    --fw-color-text: #000000;
+
+    --fw-radius-base: 12px;
+}

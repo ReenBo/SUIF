@@ -1,0 +1,6 @@
+.unity-label, .unity-text-element {
+    margin: 0;
+    padding: 0;
+    /* font-family: var(--fw-font-main); */
+    color: var(--fw-color-text);
+}

@@ -1,0 +1,23 @@
+.unity-text-element {
+    -unity-font-definition: initial;
+    color: var(--fw-color-text, #FFFFFF);
+    -unity-text-align: middle-left;
+    white-space: normal;
+    text-overflow: ellipsis;
+    margin: 0;
+    padding: 0;
+}
+
+.fw-text-h1, .fw-text-h2, .fw-text-h3 {
+    -unity-font-style: bold;
+    color: var(--fw-color-text-header, #FFFFFF);
+}
+
+.fw-text-body {
+    -unity-font-style: normal;
+}
+
+.fw-text-caption {
+    -unity-font-style: italic;
+    color: var(--fw-color-text-muted, #AAAAAA);
+}

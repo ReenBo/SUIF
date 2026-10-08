@@ -1,0 +1,16 @@
+.unity-text-element {
+    -unity-font: none;
+    -unity-font-definition: url("project/Assets/_project/Scripts/UI/UIFramework/Styles/5_Themes/Typography/Fonts/Schiffbauer-Regular SDF.asset");
+}
+
+.fw-text-h1 {
+    font-size: 40px; 
+}
+
+.fw-text-h2 {
+    font-size: 28px;
+}
+
+.fw-text-body {
+    font-size: 16px;
+}

@@ -1,0 +1,10 @@
+.fw-card {
+    background-color: var(--fw-color-bg-panel);
+    border-radius: var(--fw-radius-base);
+    padding: var(--fw-spacing-xl);
+    min-width: 300px;
+    align-items: center;
+    justify-content: center;
+    border-width: 1px;
+    border-color: var(--fw-color-border);
+}

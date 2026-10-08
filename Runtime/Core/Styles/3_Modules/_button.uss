@@ -1,0 +1,28 @@
+.fw-btn {
+    background-color: var(--fw-color-primary);
+    color: var(--fw-color-text);
+    border-radius: var(--fw-radius-base);
+    padding: var(--fw-spacing-medium) var(--fw-spacing-large);
+    
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+    
+    font-size: 16px;
+    -unity-font-style: bold;
+    
+    transition-duration: var(--fw-duration-fast);
+    transition-property: background-color, scale, border-color;
+    align-items: center;
+    justify-content: center;
+}
+
+.fw-btn:hover {
+    background-color: var(--fw-color-primary-hover);
+    scale: 1.02;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.fw-btn:active {
+    background-color: var(--fw-color-primary-active);
+    scale: 0.98;
+}
