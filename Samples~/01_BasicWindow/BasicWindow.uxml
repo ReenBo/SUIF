@@ -1,0 +1,5 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement class="c-window" picking-mode="Ignore">
+        <ui:Label text="Sample 01: Basic Window" class="c-window__title" />
+    </ui:VisualElement>
+</ui:UXML>
