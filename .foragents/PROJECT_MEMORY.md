@@ -12,10 +12,11 @@
 - [x] Initialized `.foragents/` infrastructure.
 - [x] Setup UPM package structure (`package.json`, `Runtime/Core`, `Runtime/Integrations`, `Editor`, `Documentation~`, `Samples~`).
 - [x] Ported and modularized proven UIFramework source files into `SUIF.Core`, `SUIF.VContainer`, `SUIF.Addressables`, and `SUIF.R3`.
+- [x] Elevated **UniTask** to Gold Standard with mandatory `CancellationToken` passing throughout all async APIs.
+- [x] Integrated all accumulated knowledge base instructions (ROADMAP, 8 Zero-Allocation rules, SMACSS guidelines & engine gotchas) into `Documentation~/`.
 - [x] Implemented 1-click Window Wizard Editor tool (`Tools > SUIF > Create UI Window Wizard...`).
-- [x] Created comprehensive documentation suite in `Documentation~/` and `README.md`.
 - [x] Created all 5 UPM Samples in `Samples~/`.
-- [x] Created `CHANGELOG.md` for version 1.0.0.
+- [x] Created `CHANGELOG.md` (v1.0.1).
 - [ ] **Next**: Validate package installation into test project or host project via UPM Git URL or submodule.
 
 ---
@@ -23,26 +24,28 @@
 ## 📐 2. Architectural Decisions Record (ADR)
 
 * **Architecture**: Declarative MVVM + UI Toolkit + SMACSS CSS Architecture for Unity 6+.
-* **Package Format**: Root UPM Package (`package.json` at repo root, installable via UPM Git URL or submodule).
+* **Async Engine**: **UniTask as Gold Standard**:
+  * Struct-based value-type async/await throughout.
+  * Mandatory `CancellationToken ct = default` across all async APIs (`IUIFlow`, `IUIAssetProvider`, `IViewFactory`, `IUIThemeService`, `IUIWindowManager`).
+  * Modal dialogs and confirmations use `UniTaskCompletionSource<T>`.
+  * Startup initialization uses VContainer `IAsyncStartable`.
 * **Dependency Strategy**: **Inverted Dependencies with Version Defines**:
   * `SUIF.Core` (asmdef: `SUIF.Core`): Zero-dependency core contracts (`IUIWindow`, `IUIView`, `IUIViewModel`, `IUIAssetProvider`, `IUIDependencyResolver`).
   * `SUIF.VContainer` (asmdef: `SUIF.VContainer`): First-class VContainer support, auto-activated via `versionDefines` (`jp.hadashikick.vcontainer`).
   * `SUIF.Addressables` (asmdef: `SUIF.Addressables`): First-class Addressables support, auto-activated via `versionDefines` (`com.unity.addressables`).
   * `SUIF.R3` (asmdef: `SUIF.R3`): Reactive UI Toolkit bindings, auto-activated via `R3`.
-* **Zero-Allocation**: No heap allocations, boxing, or LINQ in frequent runtime loops, binding callbacks, or `ITickable.Tick()`.
-* **String Formatting**: `ZString` for high-frequency runtime text updates.
-* **UI Toolkit Rules**:
-  * Strict SMACSS layering (`1_Base`, `2_Layout`, `3_Modules`, `4_States`, `5_Themes`).
-  * `picking-mode="Ignore"` inline on transparent wrapper layers in UXML.
-  * Virtualized ListView recycling uses `IView.Unbind()` / `ViewBinder.Clear()` to preserve ViewModels and CompositeDisposables.
-
----
-
-## ⚠️ 3. Known Gotchas & Technical Debt
-
-* *Samples Folder*: Must use `Samples~` with tilde `~` so Unity doesn't import sample assets into users' projects automatically until imported via Package Manager.
-* *Documentation Folder*: Must use `Documentation~` with tilde `~` so Unity ignores markdown files during asset importing.
-* *Version Defines*: Integration asmdefs require `versionDefines` matching exact package name identifiers.
+* **8 Mandatory Zero-Allocation Rules**:
+  1. Strings & Enums: Switch expressions with string constants (no `.ToString()` or `$"..."`).
+  2. Dictionaries over loops: O(1) state tracking.
+  3. No idle UI Toolkit calls: Check before `BringToFront()` or `RemoveFromClassList()`.
+  4. No over-engineering for raw visuals: Lightweight direct element loading for `ModalBlocker`.
+  5. No allocations for debugger aesthetics: Static names only.
+  6. Strict restriction on `static`: Only stateless generic caches (`UIViewAttributeCache<T>`).
+  7. No magic strings: Extracted into constants.
+  8. Strict prohibition of LINQ: Manual indexed loops and break statements.
+* **UI Toolkit Engine Gotchas**:
+  * `TemplateContainer` 0x0 collapse fix: `.l-layer > * { flex-grow: 1; }`.
+  * `picking-mode` is a UXML attribute, NOT a USS property: set `picking-mode="Ignore"` inline in UXML.
 
 ---
 
@@ -50,4 +53,4 @@
 
 * **Date**: 2026-10-08
 * **Role**: Primary Agent / Task Analyzer & Code Architect
-* **Summary**: Built complete SUIF 1.0.0 package on develop branch. Decoupled Core from VContainer/Addressables via IUIDependencyResolver/IUIAssetProvider with versionDefines modules. Created Editor Window Wizard, 5-sample suite, and comprehensive documentation manuals.
+* **Summary**: Version 1.0.1 released on develop. Fully incorporated accumulated knowledge base (ROADMAP, 8 Zero-Allocation rules, SMACSS guide, layout gotchas). Formally established UniTask as the first-class Gold Standard across all async methods with mandatory CancellationToken support.
