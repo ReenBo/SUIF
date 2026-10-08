@@ -81,10 +81,25 @@ namespace SUIF.ViewSystems
                 return;
             }
 
-            var blockerAsset = await _assetProvider.LoadAssetAsync<VisualTreeAsset>("ModalBlocker", ct);
-            if (blockerAsset == null) return;
+            VisualElement blocker = null;
+            try
+            {
+                var blockerAsset = await _assetProvider.LoadAssetAsync<VisualTreeAsset>("ModalBlocker", ct);
+                if (blockerAsset != null)
+                {
+                    blocker = blockerAsset.Instantiate();
+                }
+            }
+            catch
+            {
+                // Fallback to procedural blocker if ModalBlocker asset is not defined in asset provider
+            }
 
-            var blocker = blockerAsset.Instantiate();
+            if (blocker == null)
+            {
+                blocker = CreateDefaultModalBlocker();
+            }
+
             var targetLayer = _uiRoot.Container.Q(viewData.Layer.ToContainerName());
             if (targetLayer == null) return;
 
@@ -93,6 +108,22 @@ namespace SUIF.ViewSystems
             viewData.View.VisualElement.BringToFront();
 
             _modalBlockers[viewData.View] = blocker;
+        }
+
+        private static VisualElement CreateDefaultModalBlocker()
+        {
+            var blocker = new VisualElement
+            {
+                name = "fw-modal-blocker",
+                pickingMode = PickingMode.Position
+            };
+            blocker.AddToClassList("fw-modal-blocker");
+            blocker.style.position = Position.Absolute;
+            blocker.style.left = 0;
+            blocker.style.right = 0;
+            blocker.style.top = 0;
+            blocker.style.bottom = 0;
+            return blocker;
         }
 
         private void RemoveModalBlocker(ViewData viewData)
@@ -108,7 +139,14 @@ namespace SUIF.ViewSystems
             if (_modalBlockers.Remove(viewData.View, out var blocker))
             {
                 blocker.RemoveFromHierarchy();
-                _assetProvider.ReleaseAsset("ModalBlocker");
+                try
+                {
+                    _assetProvider.ReleaseAsset("ModalBlocker");
+                }
+                catch
+                {
+                    // Ignore release errors for procedural blockers
+                }
             }
         }
 
