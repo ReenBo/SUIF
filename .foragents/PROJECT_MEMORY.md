@@ -10,9 +10,13 @@
 - [x] Cloned `https://github.com/ReenBo/SUIF.git` and configured `develop` branch.
 - [x] Connected `.agents` (AI Workflow v1.1.0) as submodule.
 - [x] Initialized `.foragents/` infrastructure.
-- [/] **In Progress**: Setup UPM package structure (`package.json`, `Runtime/Core`, `Runtime/Integrations`, `Editor`, `Documentation~`, `Samples~`).
-- [ ] **Next**: Port and modularize proven UIFramework source files into `SUIF.Core`, `SUIF.VContainer`, `SUIF.Addressables`, and `SUIF.Reactive`.
-- [ ] **Next**: Create comprehensive documentation (`Documentation~/`) and UPM samples (`Samples~/`).
+- [x] Setup UPM package structure (`package.json`, `Runtime/Core`, `Runtime/Integrations`, `Editor`, `Documentation~`, `Samples~`).
+- [x] Ported and modularized proven UIFramework source files into `SUIF.Core`, `SUIF.VContainer`, `SUIF.Addressables`, and `SUIF.R3`.
+- [x] Implemented 1-click Window Wizard Editor tool (`Tools > SUIF > Create UI Window Wizard...`).
+- [x] Created comprehensive documentation suite in `Documentation~/` and `README.md`.
+- [x] Created all 5 UPM Samples in `Samples~/`.
+- [x] Created `CHANGELOG.md` for version 1.0.0.
+- [ ] **Next**: Validate package installation into test project or host project via UPM Git URL or submodule.
 
 ---
 
@@ -21,10 +25,10 @@
 * **Architecture**: Declarative MVVM + UI Toolkit + SMACSS CSS Architecture for Unity 6+.
 * **Package Format**: Root UPM Package (`package.json` at repo root, installable via UPM Git URL or submodule).
 * **Dependency Strategy**: **Inverted Dependencies with Version Defines**:
-  * `SUIF.Core` (asmdef: `com.reenbo.suif.core`): Zero-dependency core contracts (`IUIWindow`, `IUIView`, `IUIViewModel`, `IUIAssetProvider`, `IUIDependencyResolver`).
-  * `SUIF.VContainer` (asmdef: `com.reenbo.suif.vcontainer`): First-class VContainer support, auto-activated via `versionDefines` (`jp.hadashikick.vcontainer`).
-  * `SUIF.Addressables` (asmdef: `com.reenbo.suif.addressables`): First-class Addressables support, auto-activated via `versionDefines` (`com.unity.addressables`).
-  * `SUIF.Reactive` (asmdef: `com.reenbo.suif.reactive`): Reactive UI Toolkit bindings, auto-activated via `versionDefines` (`R3`).
+  * `SUIF.Core` (asmdef: `SUIF.Core`): Zero-dependency core contracts (`IUIWindow`, `IUIView`, `IUIViewModel`, `IUIAssetProvider`, `IUIDependencyResolver`).
+  * `SUIF.VContainer` (asmdef: `SUIF.VContainer`): First-class VContainer support, auto-activated via `versionDefines` (`jp.hadashikick.vcontainer`).
+  * `SUIF.Addressables` (asmdef: `SUIF.Addressables`): First-class Addressables support, auto-activated via `versionDefines` (`com.unity.addressables`).
+  * `SUIF.R3` (asmdef: `SUIF.R3`): Reactive UI Toolkit bindings, auto-activated via `R3`.
 * **Zero-Allocation**: No heap allocations, boxing, or LINQ in frequent runtime loops, binding callbacks, or `ITickable.Tick()`.
 * **String Formatting**: `ZString` for high-frequency runtime text updates.
 * **UI Toolkit Rules**:
@@ -38,12 +42,12 @@
 
 * *Samples Folder*: Must use `Samples~` with tilde `~` so Unity doesn't import sample assets into users' projects automatically until imported via Package Manager.
 * *Documentation Folder*: Must use `Documentation~` with tilde `~` so Unity ignores markdown files during asset importing.
-* *Version Defines*: Always declare `versionDefines` in integration asmdefs so absence of external packages does not produce compiler errors.
+* *Version Defines*: Integration asmdefs require `versionDefines` matching exact package name identifiers.
 
 ---
 
 ## 📜 4. Last Session Log
 
 * **Date**: 2026-10-08
-* **Role**: Primary Agent / Task Analyzer & Architect
-* **Summary**: Initialized SUIF repository on develop branch. Added .agents submodule and .foragents memory tracking. Commencing UPM package scaffolding and code migration.
+* **Role**: Primary Agent / Task Analyzer & Code Architect
+* **Summary**: Built complete SUIF 1.0.0 package on develop branch. Decoupled Core from VContainer/Addressables via IUIDependencyResolver/IUIAssetProvider with versionDefines modules. Created Editor Window Wizard, 5-sample suite, and comprehensive documentation manuals.
