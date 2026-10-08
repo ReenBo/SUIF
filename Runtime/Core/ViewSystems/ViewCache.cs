@@ -61,12 +61,5 @@ namespace SUIF.ViewSystems
             return false;
         }
 
-        IEnumerable<IView> IViewCache.GetAllViews()
-        {
-            foreach (var item in _viewsList)
-            {
-                yield return item.View;
-            }
-        }
     }
 }
