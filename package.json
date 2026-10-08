@@ -1,0 +1,57 @@
+{
+  "name": "com.reenbo.suif",
+  "version": "1.0.0",
+  "displayName": "SUIF - Scalable UI Framework",
+  "description": "Ultra-performant, modular, and declarative MVVM UI Toolkit framework for Unity 6+. Features zero-allocation data binding, SMACSS styling architecture, scoped window management, and out-of-the-box VContainer and Addressables integration.",
+  "unity": "6000.0",
+  "unityRelease": "0b1",
+  "documentationUrl": "https://github.com/ReenBo/SUIF/tree/develop/Documentation~",
+  "changelogUrl": "https://github.com/ReenBo/SUIF/blob/develop/CHANGELOG.md",
+  "licensesUrl": "https://github.com/ReenBo/SUIF/blob/develop/LICENSE",
+  "keywords": [
+    "ui",
+    "ui-toolkit",
+    "mvvm",
+    "vcontainer",
+    "addressables",
+    "r3",
+    "unitask",
+    "smacss",
+    "performance"
+  ],
+  "author": {
+    "name": "ReenBo",
+    "url": "https://github.com/ReenBo"
+  },
+  "dependencies": {
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.modules.ui": "1.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "01. Basic Window Lifecycle",
+      "description": "Demonstrates window creation, configuration, opening, closing, and transitions using SUIF Core.",
+      "path": "Samples~/01_BasicWindow"
+    },
+    {
+      "displayName": "02. MVVM & Zero-Allocation Data Binding",
+      "description": "Two-way data binding with ViewBinder, reactive properties, and ZString runtime text formatting.",
+      "path": "Samples~/02_DataBinding_MVVM"
+    },
+    {
+      "displayName": "03. Virtualized Recycled List",
+      "description": "Zero-allocation virtualized list view with view-model recycling and state preservation.",
+      "path": "Samples~/03_VirtualizedList"
+    },
+    {
+      "displayName": "04. Dynamic Theming (SMACSS)",
+      "description": "Runtime theme swapping, CSS variables/classes, and SMACSS 5-layer style architecture.",
+      "path": "Samples~/04_Theming_And_Styles"
+    },
+    {
+      "displayName": "05. Modals, Popups & Dialogs",
+      "description": "Modal stacking, confirmation dialogs, back-stack management, and input blocking.",
+      "path": "Samples~/05_Popups_And_Modals"
+    }
+  ]
+}
