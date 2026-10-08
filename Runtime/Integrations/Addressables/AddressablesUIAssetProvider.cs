@@ -23,7 +23,7 @@ namespace SUIF.Addressables
             var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<T>(key);
             _handles[key] = handle;
 
-            var asset = await handle.ToUniTask(cancellationToken: ct);
+            var asset = await handle.WithCancellation(ct);
             return asset;
         }
 
