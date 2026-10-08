@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using SUIF.API;
 using UnityEngine;
@@ -11,8 +12,9 @@ namespace SUIF.Addressables
     {
         private readonly Dictionary<string, AsyncOperationHandle> _handles = new();
 
-        public async UniTask<T> LoadAssetAsync<T>(string key) where T : Object
+        public async UniTask<T> LoadAssetAsync<T>(string key, CancellationToken ct = default) where T : Object
         {
+            ct.ThrowIfCancellationRequested();
             if (_handles.TryGetValue(key, out var existingHandle))
             {
                 return existingHandle.Result as T;
@@ -21,7 +23,7 @@ namespace SUIF.Addressables
             var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<T>(key);
             _handles[key] = handle;
 
-            var asset = await handle.ToUniTask();
+            var asset = await handle.ToUniTask(cancellationToken: ct);
             return asset;
         }
 

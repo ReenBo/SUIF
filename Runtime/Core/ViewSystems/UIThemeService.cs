@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using SUIF.API;
 using UnityEngine.UIElements;
@@ -18,8 +19,10 @@ namespace SUIF.ViewSystems
             _assetProvider = assetProvider;
         }
 
-        public async UniTask SetTypographyThemeAsync(string addressableKey)
+        public async UniTask SetTypographyThemeAsync(string addressableKey, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
+
             if (_currentTypographyTheme != null)
             {
                 _uiRoot.Container.styleSheets.Remove(_currentTypographyTheme);
@@ -34,7 +37,8 @@ namespace SUIF.ViewSystems
             if (string.IsNullOrEmpty(addressableKey)) return;
 
             _currentThemeKey = addressableKey;
-            var styleSheet = await _assetProvider.LoadAssetAsync<StyleSheet>(addressableKey);
+            var styleSheet = await _assetProvider.LoadAssetAsync<StyleSheet>(addressableKey, ct);
+            ct.ThrowIfCancellationRequested();
 
             if (styleSheet != null)
             {

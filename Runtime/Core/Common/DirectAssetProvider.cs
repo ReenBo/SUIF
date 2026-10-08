@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using SUIF.API;
 using UnityEngine;
@@ -14,8 +15,9 @@ namespace SUIF.Common
             _assets[key] = asset;
         }
 
-        public UniTask<T> LoadAssetAsync<T>(string key) where T : Object
+        public UniTask<T> LoadAssetAsync<T>(string key, CancellationToken ct = default) where T : Object
         {
+            ct.ThrowIfCancellationRequested();
             if (_assets.TryGetValue(key, out var obj) && obj is T typed)
             {
                 return UniTask.FromResult(typed);
@@ -27,7 +29,6 @@ namespace SUIF.Common
 
         public void ReleaseAsset(string key)
         {
-            // Direct reference / Resources no-op or Resources.UnloadUnusedAssets
         }
     }
 }

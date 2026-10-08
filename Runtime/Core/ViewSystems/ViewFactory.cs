@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using SUIF.API;
 using SUIF.Attributes;
@@ -19,8 +20,9 @@ namespace SUIF.ViewSystems
             _assetProvider = assetProvider ?? throw new ArgumentNullException(nameof(assetProvider));
         }
 
-        public async UniTask<TView> CreateAsync<TView>() where TView : class, IView
+        public async UniTask<TView> CreateAsync<TView>(CancellationToken ct = default) where TView : class, IView
         {
+            ct.ThrowIfCancellationRequested();
             var type = typeof(TView);
             var attr = UIViewAttributeCache<TView>.Attribute;
 
@@ -29,7 +31,9 @@ namespace SUIF.ViewSystems
                 throw new InvalidOperationException($"View {type.Name} must have UIView attribute.");
             }
 
-            var visualTreeAsset = await _assetProvider.LoadAssetAsync<VisualTreeAsset>(attr.ViewKey);
+            var visualTreeAsset = await _assetProvider.LoadAssetAsync<VisualTreeAsset>(attr.ViewKey, ct);
+            ct.ThrowIfCancellationRequested();
+
             if (visualTreeAsset is null)
             {
                 throw new InvalidOperationException($"Failed to load VisualTreeAsset for key '{attr.ViewKey}'.");

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using SUIF.API;
 using SUIF.Attributes;
@@ -18,18 +19,20 @@ namespace SUIF.ViewSystems
             _windowManager = windowManager;
         }
 
-        public async UniTask<TView> OpenViewAsync<TView>() where TView : class, IView
+        public async UniTask<TView> OpenViewAsync<TView>(CancellationToken ct = default) where TView : class, IView
         {
+            ct.ThrowIfCancellationRequested();
             var type = typeof(TView);
 
             if (_viewCache.TryGetView(type, out var viewData))
             {
                 viewData.View.Show();
-                await _windowManager.OnViewOpenedAsync(viewData);
+                await _windowManager.OnViewOpenedAsync(viewData, ct);
                 return (TView)viewData.View;
             }
 
-            var view = await _viewFactory.CreateAsync<TView>();
+            var view = await _viewFactory.CreateAsync<TView>(ct);
+            ct.ThrowIfCancellationRequested();
 
             var attr = UIViewAttributeCache<TView>.Attribute;
 
@@ -46,12 +49,12 @@ namespace SUIF.ViewSystems
             _viewCache.Register(type, viewData);
 
             view.Show();
-            await _windowManager.OnViewOpenedAsync(viewData);
+            await _windowManager.OnViewOpenedAsync(viewData, ct);
 
             return view;
         }
 
-        public async UniTask CloseViewAsync<TView>() where TView : class, IView
+        public async UniTask CloseViewAsync<TView>(CancellationToken ct = default) where TView : class, IView
         {
             var type = typeof(TView);
 
@@ -77,7 +80,7 @@ namespace SUIF.ViewSystems
                 }
             }
 
-            await UniTask.Yield();
+            await UniTask.Yield(ct);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using SUIF.API;
 using UnityEngine.UIElements;
@@ -27,11 +28,13 @@ namespace SUIF.ViewSystems
             _assetProvider = assetProvider;
         }
 
-        public async UniTask OnViewOpenedAsync(ViewData viewData)
+        public async UniTask OnViewOpenedAsync(ViewData viewData, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
+
             if (viewData.IsModal)
             {
-                await CreateModalBlockerAsync(viewData);
+                await CreateModalBlockerAsync(viewData, ct);
             }
 
             if (viewData.Layer is UILayer.Windows or UILayer.Popups)
@@ -67,7 +70,7 @@ namespace SUIF.ViewSystems
             }
         }
 
-        private async UniTask CreateModalBlockerAsync(ViewData viewData)
+        private async UniTask CreateModalBlockerAsync(ViewData viewData, CancellationToken ct = default)
         {
             if (_modalBlockers.ContainsKey(viewData.View))
             {
@@ -78,7 +81,7 @@ namespace SUIF.ViewSystems
                 return;
             }
 
-            var blockerAsset = await _assetProvider.LoadAssetAsync<VisualTreeAsset>("ModalBlocker");
+            var blockerAsset = await _assetProvider.LoadAssetAsync<VisualTreeAsset>("ModalBlocker", ct);
             if (blockerAsset == null) return;
 
             var blocker = blockerAsset.Instantiate();
