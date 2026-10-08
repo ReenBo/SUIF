@@ -53,3 +53,15 @@
 * **ViewModel Lifetime:** All ViewModels are strictly registered with `Lifetime.Transient` to prevent shared state bugs.
 * **Service Lifetime:** Core UI managers (`UIFlow`, `UIWindowManager`, `ViewCache`) are `Lifetime.Singleton`.
 * **Startup Initialization:** Asynchronous bootstrapping leverages VContainer's `IAsyncStartable`.
+
+---
+
+## 3. Future Milestones & Evolution Backlog (v2.0)
+
+### [SUIF-TASK-1] First-Class DI & Scoped Window Hierarchies
+- **Objective:** Eliminate the dual abstraction of `IUIDependencyResolver` in favor of direct compile-time defines (`#if SUIF_VCONTAINER_SUPPORT`).
+- **Feature:** Implement automatic child DI container creation (`LifetimeScope.CreateChild()`) for complex full-screen views, allowing isolated sub-systems to be disposed alongside the view.
+
+### [SUIF-TASK-2] Roslyn Source Generators for Zero-Reflection UI Binding
+- **Objective:** Completely replace runtime reflection in `UQueryResolver` and `UIViewAttributeCache` with compile-time code generation.
+- **Feature:** Generate `partial class` view extensions that bind `root.Q<T>()` directly during compilation and produce static window registries for `ViewFactory`.
