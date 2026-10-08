@@ -1,0 +1,17 @@
+{
+    "name": "SUIF.R3",
+    "rootNamespace": "SUIF.R3",
+    "references": [
+        "SUIF.Core",
+        "ZString"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

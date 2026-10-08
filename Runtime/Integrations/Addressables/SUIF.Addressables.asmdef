@@ -1,0 +1,27 @@
+{
+    "name": "SUIF.Addressables",
+    "rootNamespace": "SUIF.Addressables",
+    "references": [
+        "SUIF.Core",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "SUIF_ADDRESSABLES_SUPPORT"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.addressables",
+            "expression": "",
+            "define": "SUIF_ADDRESSABLES_SUPPORT"
+        }
+    ],
+    "noEngineReferences": false
+}

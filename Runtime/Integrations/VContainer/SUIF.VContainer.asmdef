@@ -1,0 +1,25 @@
+{
+    "name": "SUIF.VContainer",
+    "rootNamespace": "SUIF.VContainer",
+    "references": [
+        "SUIF.Core",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "SUIF_VCONTAINER_SUPPORT"
+    ],
+    "versionDefines": [
+        {
+            "name": "jp.hadashikick.vcontainer",
+            "expression": "",
+            "define": "SUIF_VCONTAINER_SUPPORT"
+        }
+    ],
+    "noEngineReferences": false
+}
