@@ -22,7 +22,7 @@
     --fw-spacing-xl: 48px;
 
     /* Typography */
-    /* --fw-font-main: url('project://database/Assets/Fonts/Inter-Regular.ttf'); */
+    /* --fw-font-main: url('Fonts/Inter-Regular.ttf'); */
 
     /* Animation Timings */
     --fw-duration-fast: 0.15s;

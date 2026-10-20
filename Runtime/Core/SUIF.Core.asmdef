@@ -3,8 +3,7 @@
     "rootNamespace": "SUIF",
     "references": [
         "UniTask",
-        "ZString",
-        "Unity.InputSystem"
+        "ZString"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

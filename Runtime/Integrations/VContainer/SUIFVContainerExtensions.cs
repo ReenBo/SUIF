@@ -1,4 +1,5 @@
 using SUIF.API;
+using SUIF.Common;
 using SUIF.ViewSystems;
 using VContainer;
 using VContainer.Unity;
@@ -15,6 +16,11 @@ namespace SUIF.VContainer
             builder.Register<UIWindowManager>(Lifetime.Singleton).AsImplementedInterfaces();
             builder.Register<UIThemeService>(Lifetime.Singleton).AsImplementedInterfaces();
             builder.Register<UIFlow>(Lifetime.Singleton).AsImplementedInterfaces();
+        }
+
+        public static void RegisterDirectAssetProvider(this IContainerBuilder builder)
+        {
+            builder.Register<DirectAssetProvider>(Lifetime.Singleton).As<IUIAssetProvider>();
         }
     }
 }

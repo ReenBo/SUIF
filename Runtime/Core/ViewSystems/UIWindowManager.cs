@@ -14,7 +14,6 @@ namespace SUIF.ViewSystems
         private const string HiddenClass = "is-hidden";
 
         private readonly IUIRoot _uiRoot;
-        private readonly IUIAssetProvider _assetProvider;
 
         private readonly Dictionary<UILayer, List<IView>> _windowsByLayer = new();
         private readonly Dictionary<VisualElement, IView> _viewsByElement = new();
@@ -22,19 +21,23 @@ namespace SUIF.ViewSystems
         private readonly Dictionary<UILayer, IView> _activeWindowsByLayer = new();
         private readonly Dictionary<IView, VisualElement> _modalBlockers = new();
 
+        public UIWindowManager(IUIRoot uiRoot)
+        {
+            _uiRoot = uiRoot;
+        }
+
         public UIWindowManager(IUIRoot uiRoot, IUIAssetProvider assetProvider)
         {
             _uiRoot = uiRoot;
-            _assetProvider = assetProvider;
         }
 
-        public async UniTask OnViewOpenedAsync(ViewData viewData, CancellationToken ct = default)
+        public UniTask OnViewOpenedAsync(ViewData viewData, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
 
             if (viewData.IsModal)
             {
-                await CreateModalBlockerAsync(viewData, ct);
+                CreateModalBlocker(viewData);
             }
 
             if (viewData.Layer is UILayer.Windows or UILayer.Popups)
@@ -42,6 +45,8 @@ namespace SUIF.ViewSystems
                 RegisterWindowFocus(viewData);
                 FocusWindow(viewData);
             }
+
+            return UniTask.CompletedTask;
         }
 
         public void OnViewClosed(ViewData viewData)
@@ -70,38 +75,22 @@ namespace SUIF.ViewSystems
             }
         }
 
-        private async UniTask CreateModalBlockerAsync(ViewData viewData, CancellationToken ct = default)
+        private void CreateModalBlocker(ViewData viewData)
         {
-            if (_modalBlockers.ContainsKey(viewData.View))
+            if (_modalBlockers.TryGetValue(viewData.View, out var existingBlocker))
             {
-                var existingBlocker = _modalBlockers[viewData.View];
                 existingBlocker.RemoveFromClassList(HiddenClass);
                 existingBlocker.BringToFront();
                 viewData.View.VisualElement.BringToFront();
                 return;
             }
 
-            VisualElement blocker = null;
-            try
-            {
-                var blockerAsset = await _assetProvider.LoadAssetAsync<VisualTreeAsset>("ModalBlocker", ct);
-                if (blockerAsset != null)
-                {
-                    blocker = blockerAsset.Instantiate();
-                }
-            }
-            catch
-            {
-                // Fallback to procedural blocker if ModalBlocker asset is not defined in asset provider
-            }
-
-            if (blocker == null)
-            {
-                blocker = CreateDefaultModalBlocker();
-            }
-
+            var blocker = CreateDefaultModalBlocker();
             var targetLayer = _uiRoot.Container.Q(viewData.Layer.ToContainerName());
-            if (targetLayer == null) return;
+            if (targetLayer == null)
+            {
+                return;
+            }
 
             targetLayer.Add(blocker);
             blocker.BringToFront();
@@ -139,14 +128,6 @@ namespace SUIF.ViewSystems
             if (_modalBlockers.Remove(viewData.View, out var blocker))
             {
                 blocker.RemoveFromHierarchy();
-                try
-                {
-                    _assetProvider.ReleaseAsset("ModalBlocker");
-                }
-                catch
-                {
-                    // Ignore release errors for procedural blockers
-                }
             }
         }
 

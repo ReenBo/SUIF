@@ -16,8 +16,9 @@
 - [x] Integrated all accumulated knowledge base instructions (ROADMAP, 8 Zero-Allocation rules, SMACSS guidelines & engine gotchas) into `Documentation~/`.
 - [x] Implemented 1-click Window Wizard Editor tool (`Tools > SUIF > Create UI Window Wizard...`).
 - [x] Created all 5 UPM Samples in `Samples~/`.
-- [x] Created `CHANGELOG.md` (v1.0.1).
-- [ ] **Next**: Validate package installation into test project or host project via UPM Git URL or submodule.
+- [x] **feature/suif-autonomy-universality**: Audited and enforced complete UPM autonomy: eliminated host project leaks in USS/TSS, made Window Generator universal, removed unused InputSystem dependency in Core, provided separate RegisterDirectAssetProvider extension to prevent scope shadowing.
+- [ ] **Next**: Goal 2 - Framework Optimization & Zero-Allocation audit for Inventory View.
+- [ ] **Next**: Goal 3 - Create complex Inventory UI-View for performance profiling.
 
 ---
 
@@ -29,11 +30,13 @@
   * Mandatory `CancellationToken ct = default` across all async APIs (`IUIFlow`, `IUIAssetProvider`, `IViewFactory`, `IUIThemeService`, `IUIWindowManager`).
   * Modal dialogs and confirmations use `UniTaskCompletionSource<T>`.
   * Startup initialization uses VContainer `IAsyncStartable`.
-* **Dependency Strategy**: **Inverted Dependencies with Version Defines**:
-  * `SUIF.Core` (asmdef: `SUIF.Core`): Zero-dependency core contracts (`IUIWindow`, `IUIView`, `IUIViewModel`, `IUIAssetProvider`, `IUIDependencyResolver`).
-  * `SUIF.VContainer` (asmdef: `SUIF.VContainer`): First-class VContainer support, auto-activated via `versionDefines` (`jp.hadashikick.vcontainer`).
+* **Dependency Strategy**: **Inverted Dependencies with Version Defines & Clean UPM Autonomy**:
+  * `SUIF.Core` (asmdef: `SUIF.Core`): Zero-dependency core contracts (`IUIWindow`, `IUIView`, `IUIViewModel`, `IUIAssetProvider`, `IUIDependencyResolver`). Only minimal runtime dependencies (`UniTask`, `ZString`).
+  * `SUIF.VContainer` (asmdef: `SUIF.VContainer`): First-class VContainer support, auto-activated via `versionDefines` (`jp.hadashikick.vcontainer`). Provides `RegisterDirectAssetProvider()` for standalone direct asset resolution without shadowing parent lifetime scopes.
   * `SUIF.Addressables` (asmdef: `SUIF.Addressables`): First-class Addressables support, auto-activated via `versionDefines` (`com.unity.addressables`).
   * `SUIF.R3` (asmdef: `SUIF.R3`): Reactive UI Toolkit bindings, auto-activated via `R3`.
+* **Standalone Assets & Themes**:
+  * All fonts and style sheets inside SUIF use relative paths (`Fonts/...`) and standard `unity-theme://default` import, with 0 dependencies on host project assets.
 * **8 Mandatory Zero-Allocation Rules**:
   1. Strings & Enums: Switch expressions with string constants (no `.ToString()` or `$"..."`).
   2. Dictionaries over loops: O(1) state tracking.
@@ -51,6 +54,6 @@
 
 ## 📜 4. Last Session Log
 
-* **Date**: 2026-10-08
-* **Role**: Primary Agent / Task Analyzer & Code Architect
-* **Summary**: Version 1.0.1 released on develop. Fully incorporated accumulated knowledge base (ROADMAP, 8 Zero-Allocation rules, SMACSS guide, layout gotchas). Formally established UniTask as the first-class Gold Standard across all async methods with mandatory CancellationToken support.
+* **Date**: 2026-10-20
+* **Role**: Primary Agent / Task Analyzer & Code Writer
+* **Summary**: Version 1.0.2 released on feature/suif-autonomy-universality. Conducted comprehensive UPM autonomy audit. Eliminated host project asset leaks in TSS.tss and typography-schiffbauer.uss. Refactored UIWindowGenerator with dynamic Project folder detection, folder browser dialog, and configurable namespace. Cleaned SUIF.Core.asmdef of unused Unity.InputSystem reference. Added default DirectAssetProvider registration in SUIFVContainerExtensions. Validated with security-pii-scanner and memory-gc-profiler (0 leaks, 0 hot allocations).

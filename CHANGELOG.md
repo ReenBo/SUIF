@@ -5,6 +5,17 @@ All notable changes to the `SUIF` package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-10-20
+
+### Improved
+- **Autonomy & Universality**:
+  - Eliminated hardcoded host project paths (`Assets/_project/...`) across USS themes and font definition references.
+  - Switched `TSS.tss` to standard `unity-theme://default` import, removing external asset dependencies.
+  - Made `UIWindowGenerator` (Window Wizard) fully autonomous: dynamic folder selection from Project view, folder browsing modal, and configurable C# namespace.
+  - Removed unused `Unity.InputSystem` assembly reference from `SUIF.Core.asmdef`, ensuring compatibility with legacy and custom input systems.
+  - Added `RegisterDirectAssetProvider()` extension to `SUIFVContainerExtensions` for standalone direct asset resolution without shadowing parent lifetime scopes.
+  - Eliminated external asset lookup for 'ModalBlocker'; procedural modal backdrop is now instantiated directly with `PickingMode.Position` per Zero-Allocation Rule 4, preventing `InvalidKeyException` in Addressables.
+
 ## [1.0.1] - 2026-10-08
 
 ### Added

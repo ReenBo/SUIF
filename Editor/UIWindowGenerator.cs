@@ -7,7 +7,8 @@ namespace SUIF.Editor
     public class UIWindowGenerator : EditorWindow
     {
         private string _windowName = "NewWindow";
-        private string _targetFolder = "Assets/_project/Scripts/UI/Windows";
+        private string _targetFolder = "Assets/UI/Windows";
+        private string _namespace = "Game.UI";
         private string _layerName = "Windows";
         private bool _isModal = false;
 
@@ -16,7 +17,24 @@ namespace SUIF.Editor
         public static void Open()
         {
             var window = GetWindow<UIWindowGenerator>("SUIF Window Wizard");
-            window.minSize = new Vector2(400, 260);
+            window.minSize = new Vector2(450, 290);
+
+            if (Selection.activeObject != null)
+            {
+                var selectedPath = AssetDatabase.GetAssetPath(Selection.activeObject);
+                if (!string.IsNullOrEmpty(selectedPath))
+                {
+                    if (File.Exists(selectedPath))
+                    {
+                        selectedPath = Path.GetDirectoryName(selectedPath);
+                    }
+                    if (!string.IsNullOrEmpty(selectedPath))
+                    {
+                        window._targetFolder = selectedPath.Replace("\\", "/");
+                    }
+                }
+            }
+
             window.Show();
         }
 
@@ -26,7 +44,27 @@ namespace SUIF.Editor
             EditorGUILayout.Space();
 
             _windowName = EditorGUILayout.TextField("Window Name:", _windowName);
+            
+            EditorGUILayout.BeginHorizontal();
             _targetFolder = EditorGUILayout.TextField("Target Directory:", _targetFolder);
+            if (GUILayout.Button("Browse...", GUILayout.Width(75)))
+            {
+                var chosen = EditorUtility.OpenFolderPanel("Select Target Directory", _targetFolder, "");
+                if (!string.IsNullOrEmpty(chosen))
+                {
+                    if (chosen.StartsWith(Application.dataPath))
+                    {
+                        _targetFolder = "Assets" + chosen.Substring(Application.dataPath.Length).Replace("\\", "/");
+                    }
+                    else
+                    {
+                        _targetFolder = chosen.Replace("\\", "/");
+                    }
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            _namespace = EditorGUILayout.TextField("Namespace:", _namespace);
             _layerName = EditorGUILayout.TextField("UI Layer:", _layerName);
             _isModal = EditorGUILayout.Toggle("Is Modal Window:", _isModal);
 
@@ -46,6 +84,8 @@ namespace SUIF.Editor
                 return;
             }
 
+            var ns = string.IsNullOrWhiteSpace(_namespace) ? "Game.UI" : _namespace.Trim();
+
             if (!Directory.Exists(_targetFolder))
             {
                 Directory.CreateDirectory(_targetFolder);
@@ -60,7 +100,7 @@ namespace SUIF.Editor
 using SUIF.Base;
 using UnityEngine.UIElements;
 
-namespace Project.UI
+namespace {ns}
 {{
     [UIView(""{_windowName}"", SUIF.API.UILayer.{_layerName}, isModal: {(_isModal ? "true" : "false")})]
     public class {_windowName}View : BaseView<{_windowName}ViewModel>
@@ -69,14 +109,13 @@ namespace Project.UI
 
         protected override void Bind()
         {{
-            // Bind view elements using Binder
         }}
     }}
 }}";
 
             var vmTemplate = $@"using SUIF.Base;
 
-namespace Project.UI
+namespace {ns}
 {{
     public class {_windowName}ViewModel : BaseViewModel
     {{
