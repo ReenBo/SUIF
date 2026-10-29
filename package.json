@@ -1,6 +1,6 @@
 {
   "name": "com.reenbo.suif",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "SUIF - Scalable UI Framework",
   "description": "Ultra-performant, modular, and declarative MVVM UI Toolkit framework for Unity 6+. Features zero-allocation data binding, SMACSS styling architecture, scoped window management, and out-of-the-box VContainer and Addressables integration.",
   "unity": "6000.0",

@@ -3,7 +3,8 @@
     "rootNamespace": "SUIF.R3",
     "references": [
         "SUIF.Core",
-        "ZString"
+        "ZString",
+        "R3.Unity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -11,7 +12,15 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
+    "defineConstraints": [
+        "SUIF_R3_SUPPORT"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.cysharp.r3",
+            "expression": "",
+            "define": "SUIF_R3_SUPPORT"
+        }
+    ],
     "noEngineReferences": false
 }

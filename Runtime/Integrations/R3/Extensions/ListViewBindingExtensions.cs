@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
-using ObservableCollections;
-using R3;
+using global::ObservableCollections;
+using global::R3;
 using SUIF.API;
 using SUIF.Base;
 using SUIF.Binding;

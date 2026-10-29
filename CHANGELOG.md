@@ -5,6 +5,13 @@ All notable changes to the `SUIF` package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-10-29
+
+### Fixed
+- **R3 Assembly References**: Added missing `R3.Unity` assembly definition reference and `com.cysharp.r3` version defines to `SUIF.R3.asmdef`.
+- **R3 Namespace Resolution**: Standardized `global::R3` across all reactive binding extensions (`LabelBindingExtensions`, `ButtonBindingExtensions`, `ToggleBindingExtensions`, `ListViewBindingExtensions`) to resolve type lookup collisions with `SUIF.R3`.
+- **USS Syntax Warning**: Removed invalid `-unity-font: none;` property from `typography-schiffbauer.uss`.
+
 ## [1.0.2] - 2026-10-20
 
 ### Improved

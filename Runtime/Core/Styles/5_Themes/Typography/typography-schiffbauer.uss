@@ -1,5 +1,4 @@
 .unity-text-element {
-    -unity-font: none;
     -unity-font-definition: url("Fonts/Schiffbauer-Regular SDF.asset");
 }
 
