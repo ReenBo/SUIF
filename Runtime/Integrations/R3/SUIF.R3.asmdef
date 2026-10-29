@@ -9,8 +9,12 @@
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "ObservableCollections.dll",
+        "ObservableCollections.R3.dll",
+        "R3.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [
         "SUIF_R3_SUPPORT"
