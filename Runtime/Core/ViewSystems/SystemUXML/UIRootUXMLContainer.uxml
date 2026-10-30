@@ -1,10 +1,11 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <ui:VisualElement name="ViewBox" class="l-layer" picking-mode="Ignore">
-        <ui:VisualElement name="Layer-Background" class="l-layer" picking-mode="Ignore" />
-        <ui:VisualElement name="Layer-Screens" class="l-layer" picking-mode="Ignore" />
-        <ui:VisualElement name="Layer-Windows" class="l-layer" picking-mode="Ignore" />
-        <ui:VisualElement name="Layer-Popups" class="l-layer" picking-mode="Ignore" />
-        <ui:VisualElement name="Layer-Topmost" class="l-layer" picking-mode="Ignore" />
-        <ui:VisualElement name="Default" class="l-layer" picking-mode="Ignore" />
+    <ui:Style src="../../Styles/2_Layout/_containers.uss" />
+    <ui:VisualElement name="ViewBox" class="l-layer" picking-mode="Ignore" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;">
+        <ui:VisualElement name="Layer-Background" class="l-layer" picking-mode="Ignore" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+        <ui:VisualElement name="Layer-Screens" class="l-layer" picking-mode="Ignore" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+        <ui:VisualElement name="Layer-Windows" class="l-layer" picking-mode="Ignore" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+        <ui:VisualElement name="Layer-Popups" class="l-layer" picking-mode="Ignore" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+        <ui:VisualElement name="Layer-Topmost" class="l-layer" picking-mode="Ignore" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+        <ui:VisualElement name="Default" class="l-layer" picking-mode="Ignore" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
     </ui:VisualElement>
 </ui:UXML>
