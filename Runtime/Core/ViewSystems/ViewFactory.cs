@@ -40,6 +40,7 @@ namespace SUIF.ViewSystems
             }
 
             var layerContainer = _uiRoot.Container.Q(attr.Layer.ToContainerName());
+            
             if (layerContainer is null)
             {
                 throw new InvalidOperationException($"Failed to find layer '{attr.Layer}' in UIRoot.");
@@ -47,6 +48,7 @@ namespace SUIF.ViewSystems
 
             var template = visualTreeAsset.Instantiate();
             var viewElement = template.childCount > 0 ? template[0] : template;
+            
             if (viewElement != template)
             {
                 for (var i = 0; i < template.styleSheets.count; i++)
@@ -54,6 +56,7 @@ namespace SUIF.ViewSystems
                     viewElement.styleSheets.Add(template.styleSheets[i]);
                 }
             }
+            
             viewElement.name = type.Name;
 
             layerContainer.Add(viewElement);

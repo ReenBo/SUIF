@@ -21,11 +21,13 @@ namespace SUIF.ViewSystems
             if (_uiDocument != null && _uiDocument.rootVisualElement != null)
             {
                 var viewBox = _uiDocument.rootVisualElement.Q("ViewBox");
+
                 if (viewBox != null)
                 {
                     viewBox.style.flexGrow = 1;
                     viewBox.style.width = Length.Percent(100);
                     viewBox.style.height = Length.Percent(100);
+                    
                     foreach (var child in viewBox.Children())
                     {
                         child.style.position = Position.Absolute;
