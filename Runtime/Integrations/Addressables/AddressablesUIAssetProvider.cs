@@ -17,14 +17,38 @@ namespace SUIF.Addressables
             ct.ThrowIfCancellationRequested();
             if (_handles.TryGetValue(key, out var existingHandle))
             {
-                return existingHandle.Result as T;
+                if (existingHandle.IsValid() && existingHandle.IsDone && existingHandle.Status == AsyncOperationStatus.Succeeded)
+                {
+                    return existingHandle.Result as T;
+                }
+                if (!existingHandle.IsValid() || existingHandle.Status == AsyncOperationStatus.Failed)
+                {
+                    _handles.Remove(key);
+                }
+                else if (!existingHandle.IsDone)
+                {
+                    await existingHandle.WithCancellation(ct);
+                    return existingHandle.Result as T;
+                }
             }
 
             var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<T>(key);
             _handles[key] = handle;
 
-            var asset = await handle.WithCancellation(ct);
-            return asset;
+            try
+            {
+                var asset = await handle.WithCancellation(ct);
+                return asset;
+            }
+            catch
+            {
+                _handles.Remove(key);
+                if (handle.IsValid())
+                {
+                    UnityEngine.AddressableAssets.Addressables.Release(handle);
+                }
+                throw;
+            }
         }
 
         public void ReleaseAsset(string key)
