@@ -16,12 +16,14 @@ namespace SUIF.Binding
 
         private readonly TextElement _target;
         private readonly Action<TextElement.GlyphsEnumerable> _collapseCallback;
+        private readonly EventCallback<AttachToPanelEvent> _attachCallback;
         private readonly bool _clampToCapacity;
 
         private int _capacity;
         private char[] _buffer;
         private int _lastRawVisibleLength = -1;
         private int _lastGlyphCutoffIndex;
+        private int _pendingWriteLength = -1;
         private bool _disposed;
 
         public int Capacity => _capacity;
@@ -38,11 +40,13 @@ namespace SUIF.Binding
             _capacity = capacity;
             _clampToCapacity = clampToCapacity;
             _collapseCallback = CollapsePaddingGlyphs;
+            _attachCallback = OnAttachToPanel;
 
             EnsureBufferCapacity(capacity + WrapperOverhead + 64);
 
             _target.enableRichText = true;
             _target.PostProcessTextVertices += _collapseCallback;
+            _target.RegisterCallback(_attachCallback);
 
             if (initialText != null)
             {
@@ -111,7 +115,15 @@ namespace SUIF.Binding
             _lastRawVisibleLength = acceptedRawLength;
             _lastGlyphCutoffIndex = parsedVisibleLength;
 
-            _target.SetText(_buffer, 0, writeIndex);
+            if (_target.panel != null)
+            {
+                _pendingWriteLength = -1;
+                _target.SetText(_buffer, 0, writeIndex);
+            }
+            else
+            {
+                _pendingWriteLength = writeIndex;
+            }
         }
 
         public void SetFormat<T1>(string format, T1 arg1)
@@ -254,6 +266,18 @@ namespace SUIF.Binding
             }
         }
 
+        private void OnAttachToPanel(AttachToPanelEvent evt)
+        {
+            if (_disposed || _pendingWriteLength < 0 || _target.panel == null)
+            {
+                return;
+            }
+
+            int writeLength = _pendingWriteLength;
+            _pendingWriteLength = -1;
+            _target.SetText(_buffer, 0, writeLength);
+        }
+
         public void Dispose()
         {
             if (_disposed)
@@ -262,7 +286,9 @@ namespace SUIF.Binding
             }
 
             _disposed = true;
+            _pendingWriteLength = -1;
             _target.PostProcessTextVertices -= _collapseCallback;
+            _target.UnregisterCallback(_attachCallback);
         }
     }
 }
