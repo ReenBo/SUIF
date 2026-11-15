@@ -61,6 +61,10 @@ namespace SUIF.Base
             {
                 VisualElement.AddToClassList(HiddenClass);
             }
+            if (VisualElement.style.display != DisplayStyle.None)
+            {
+                VisualElement.style.display = DisplayStyle.None;
+            }
         }
 
         public virtual void Unbind()

@@ -80,6 +80,8 @@ namespace SUIF.ViewSystems
             if (_modalBlockers.TryGetValue(viewData.View, out var existingBlocker))
             {
                 existingBlocker.RemoveFromClassList(HiddenClass);
+                existingBlocker.style.display = StyleKeyword.Null;
+                existingBlocker.pickingMode = PickingMode.Position;
                 existingBlocker.BringToFront();
                 viewData.View.VisualElement.BringToFront();
                 return;
@@ -120,6 +122,8 @@ namespace SUIF.ViewSystems
             if (_modalBlockers.TryGetValue(viewData.View, out var blocker))
             {
                 blocker.AddToClassList(HiddenClass);
+                blocker.style.display = DisplayStyle.None;
+                blocker.pickingMode = PickingMode.Ignore;
             }
         }
 
