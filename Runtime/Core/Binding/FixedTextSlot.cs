@@ -5,6 +5,8 @@ using UnityEngine.UIElements;
 
 namespace SUIF.Binding
 {
+    public delegate void FixedTextWriter<in TState>(ref Utf16ValueStringBuilder builder, TState state);
+
     public sealed class FixedTextSlot : IDisposable
     {
         private const string HiddenSizePrefix = "<size=0.01>";
@@ -134,6 +136,25 @@ namespace SUIF.Binding
             using var builder = ZString.CreateStringBuilder(true);
             builder.AppendFormat(format, arg1, arg2);
             SetText(builder.AsSpan());
+        }
+
+        public void SetWritten<TState>(TState state, FixedTextWriter<TState> writer)
+        {
+            if (_disposed || writer == null)
+            {
+                return;
+            }
+
+            var builder = ZString.CreateStringBuilder(true);
+            try
+            {
+                writer(ref builder, state);
+                SetText(builder.AsSpan());
+            }
+            finally
+            {
+                builder.Dispose();
+            }
         }
 
         public void SetCapacity(int newCapacity)

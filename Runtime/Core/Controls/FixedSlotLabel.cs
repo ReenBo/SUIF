@@ -54,6 +54,11 @@ namespace SUIF.Controls
             EnsureSlot().SetFormat(format, arg1, arg2);
         }
 
+        public void SetFixedWritten<TState>(TState state, FixedTextWriter<TState> writer)
+        {
+            EnsureSlot().SetWritten(state, writer);
+        }
+
         private FixedTextSlot EnsureSlot()
         {
             return _slot ??= new FixedTextSlot(this, _capacity);
