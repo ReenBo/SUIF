@@ -93,3 +93,9 @@ for (var i = 0; i < windowsList.Count; i++) {
     }
 }
 ```
+
+### 9. Constant-Capacity Text Slots & Fixed DOM Pools (`AllocPage` Protection)
+* **Rule:** Dynamic text updates MUST route through `FixedTextSlot`, `FixedSlotLabel`, or `ToFixedText(...)` with a pre-sized `capacity` and pure `FixedTextWriter<TState>` delegates—never mutate dynamic `Label.text` strings directly.
+* **Rule:** Repeated dynamic lists/grids MUST pre-allocate a `FixedElementPool<TElement>` once during `Bind()` rather than recreating elements via `container.Clear()` + `Add()`, and inactive cached views MUST use `DisplayStyle.None` rather than `Visibility.Hidden`.
+* **Why:** Changing text length or DOM geometry forces UI Toolkit to reallocate `AllocPage` vertex buffer slots and split `DrawRange` batches (`12–46 DC` instead of `2–4 DC`).
+* **Full Reference:** See [DTO Standard & Zero-Realloc UI Architecture](DTO_Standard_And_ZeroAlloc_UI.md).

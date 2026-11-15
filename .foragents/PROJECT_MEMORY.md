@@ -17,8 +17,10 @@
 - [x] Implemented 1-click Window Wizard Editor tool (`Tools > SUIF > Create UI Window Wizard...`).
 - [x] Created all 5 UPM Samples in `Samples~/`.
 - [x] **feature/suif-autonomy-universality**: Audited and enforced complete UPM autonomy: eliminated host project leaks in USS/TSS, made Window Generator universal, removed unused InputSystem dependency in Core, provided separate RegisterDirectAssetProvider extension to prevent scope shadowing.
-- [ ] **Next**: Goal 2 - Framework Optimization & Zero-Allocation audit for Inventory View.
-- [ ] **Next**: Goal 3 - Create complex Inventory UI-View for performance profiling.
+- [x] **DTO Standard & Zero-Realloc UI Primitives (`679ffba`, `ff8df59`, `fbcfc6e`)**:
+  - Added `IViewDto`, `BaseDtoView<TViewModel, TDto>`, `FixedTextWriter<in TState>`, `FixedTextSlot`, `FixedSlotLabel` (`[UxmlElement("FixedSlotLabel")]`), `FixedElementPool<TElement>`, `DtoBindingExtensions.ToDto`, and `LabelBindingExtensions.ToFixedText`.
+  - Authored official documentation for humans (`Documentation~/DTO_Standard_And_ZeroAlloc_UI.md`) and AI agents (`Documentation~/AI_Guidelines_DTO_And_ZeroAlloc.md`), cross-linked in `Architecture.md`, `Performance_And_Optimization.md`, and `README.md`.
+- [ ] **Next**: Keep `SUIF` docs and primitives synced with theme/formatting evolutions in host showcase.
 
 ---
 
@@ -46,6 +48,8 @@
   6. Strict restriction on `static`: Only stateless generic caches (`UIViewAttributeCache<T>`).
   7. No magic strings: Extracted into constants.
   8. Strict prohibition of LINQ: Manual indexed loops and break statements.
+  9. Constant-capacity text & DOM pools: Dynamic text MUST use `FixedTextSlot` / `FixedSlotLabel` / `ToFixedText` and `FixedTextWriter<TState>`; repeated lists MUST use `FixedElementPool<TElement>` with `DisplayStyle.None` (`BaseView.Hide()` MUST NOT use `Visibility.Hidden`).
+  10. DTO Standard: ViewModels emit `struct : IViewDto` via `ReactiveProperty<TDto>`; UI formatting lives strictly in `FixedTextWriter<TState>` formatters (`BaseDtoView<TViewModel, TDto>` + `Binder.ToDto`).
 * **UI Toolkit Engine Gotchas**:
   * `TemplateContainer` 0x0 collapse fix: `.l-layer > * { flex-grow: 1; }`.
   * `picking-mode` is a UXML attribute, NOT a USS property: set `picking-mode="Ignore"` inline in UXML.
