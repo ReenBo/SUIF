@@ -26,5 +26,41 @@ namespace SUIF.R3.Extensions
         {
             bunch.Binder.AddDisposable(property.Subscribe(bunch.Element, (val, label) => label.text = val.ToString()));
         }
+
+        public static FixedTextSlot ToFixedText<TElement>(this ElementBunch<TElement> bunch, Observable<string> property, int capacity = 32)
+            where TElement : TextElement
+        {
+            var slot = new FixedTextSlot(bunch.Element, capacity);
+            bunch.Binder.AddDisposable(slot);
+            bunch.Binder.AddDisposable(property.Subscribe(slot, (text, target) => target.SetText(text)));
+            return slot;
+        }
+
+        public static FixedTextSlot ToFixedText<TElement>(this ElementBunch<TElement> bunch, Observable<int> property, int capacity = 16, string format = "{0}")
+            where TElement : TextElement
+        {
+            var slot = new FixedTextSlot(bunch.Element, capacity);
+            bunch.Binder.AddDisposable(slot);
+            bunch.Binder.AddDisposable(property.Subscribe((slot, format), (val, state) => state.slot.SetFormat(state.format, val)));
+            return slot;
+        }
+
+        public static FixedTextSlot ToFixedText<TElement>(this ElementBunch<TElement> bunch, Observable<long> property, int capacity = 16, string format = "{0}")
+            where TElement : TextElement
+        {
+            var slot = new FixedTextSlot(bunch.Element, capacity);
+            bunch.Binder.AddDisposable(slot);
+            bunch.Binder.AddDisposable(property.Subscribe((slot, format), (val, state) => state.slot.SetFormat(state.format, val)));
+            return slot;
+        }
+
+        public static FixedTextSlot ToFixedText<TElement>(this ElementBunch<TElement> bunch, Observable<float> property, int capacity = 16, string format = "{0:F1}")
+            where TElement : TextElement
+        {
+            var slot = new FixedTextSlot(bunch.Element, capacity);
+            bunch.Binder.AddDisposable(slot);
+            bunch.Binder.AddDisposable(property.Subscribe((slot, format), (val, state) => state.slot.SetFormat(state.format, val)));
+            return slot;
+        }
     }
 }
