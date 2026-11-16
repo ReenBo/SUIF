@@ -30,13 +30,5 @@ namespace SUIF.VContainer
                 return false;
             }
         }
-
-        public void Inject(object instance)
-        {
-            if (instance != null)
-            {
-                _resolver.Inject(instance);
-            }
-        }
     }
 }

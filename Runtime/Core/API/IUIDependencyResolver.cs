@@ -7,6 +7,5 @@ namespace SUIF.API
         T Resolve<T>();
         object Resolve(Type type);
         bool TryResolve<T>(out T resolved);
-        void Inject(object instance);
     }
 }

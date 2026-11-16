@@ -62,7 +62,6 @@ namespace SUIF.ViewSystems
             layerContainer.Add(viewElement);
 
             var view = ViewTypeCache<TView>.CreateInstance(viewElement);
-            _resolver.Inject(view);
             var viewModelType = ViewTypeCache<TView>.ViewModelType;
             var viewModel = (IViewModel)_resolver.Resolve(viewModelType);
 

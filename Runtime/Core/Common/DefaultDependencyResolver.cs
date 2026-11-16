@@ -25,9 +25,5 @@ namespace SUIF.Common
                 return false;
             }
         }
-
-        public void Inject(object instance)
-        {
-        }
     }
 }
