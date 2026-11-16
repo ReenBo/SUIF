@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace SUIF.Controls
 {
     [UxmlElement("FixedSlotLabel")]
-    public partial class FixedSlotLabel : Label
+    public partial class FixedSlotLabel : Label, IDisposable
     {
         private const int DefaultCapacity = 32;
 
@@ -28,6 +28,8 @@ namespace SUIF.Controls
                 _slot?.SetCapacity(normalized);
             }
         }
+
+        public FixedTextSlot Slot => EnsureSlot();
 
         public FixedSlotLabel()
         {
@@ -67,6 +69,11 @@ namespace SUIF.Controls
         private void OnAttachToPanel(AttachToPanelEvent evt)
         {
             EnsureSlot();
+        }
+
+        public void Dispose()
+        {
+            _slot?.Dispose();
         }
     }
 }

@@ -30,36 +30,75 @@ namespace SUIF.R3.Extensions
         public static FixedTextSlot ToFixedText<TElement>(this ElementBunch<TElement> bunch, Observable<string> property, int capacity = 32)
             where TElement : TextElement
         {
-            var slot = new FixedTextSlot(bunch.Element, capacity);
-            bunch.Binder.AddDisposable(slot);
-            bunch.Binder.AddDisposable(property.Subscribe(slot, (text, target) => target.SetText(text)));
+            var slot = bunch.Binder.FixedSlot(bunch.Element, capacity);
+            if (slot != null && property != null)
+            {
+                bunch.Binder.AddDisposable(property.Subscribe(slot, static (text, target) => target.SetText(text)));
+            }
             return slot;
         }
 
         public static FixedTextSlot ToFixedText<TElement>(this ElementBunch<TElement> bunch, Observable<int> property, int capacity = 16, string format = "{0}")
             where TElement : TextElement
         {
-            var slot = new FixedTextSlot(bunch.Element, capacity);
-            bunch.Binder.AddDisposable(slot);
-            bunch.Binder.AddDisposable(property.Subscribe((slot, format), (val, state) => state.slot.SetFormat(state.format, val)));
-            return slot;
+            return BindFormatted(bunch, property, capacity, format);
         }
 
         public static FixedTextSlot ToFixedText<TElement>(this ElementBunch<TElement> bunch, Observable<long> property, int capacity = 16, string format = "{0}")
             where TElement : TextElement
         {
-            var slot = new FixedTextSlot(bunch.Element, capacity);
-            bunch.Binder.AddDisposable(slot);
-            bunch.Binder.AddDisposable(property.Subscribe((slot, format), (val, state) => state.slot.SetFormat(state.format, val)));
-            return slot;
+            return BindFormatted(bunch, property, capacity, format);
         }
 
         public static FixedTextSlot ToFixedText<TElement>(this ElementBunch<TElement> bunch, Observable<float> property, int capacity = 16, string format = "{0:F1}")
             where TElement : TextElement
         {
-            var slot = new FixedTextSlot(bunch.Element, capacity);
-            bunch.Binder.AddDisposable(slot);
-            bunch.Binder.AddDisposable(property.Subscribe((slot, format), (val, state) => state.slot.SetFormat(state.format, val)));
+            return BindFormatted(bunch, property, capacity, format);
+        }
+
+        public static FixedTextSlot ToFixedWritten<TElement, TData>(
+            this ElementBunch<TElement> bunch,
+            Observable<TData> property,
+            int capacity,
+            FixedTextWriter<TData> writer)
+            where TElement : TextElement
+        {
+            var slot = bunch.Binder.FixedSlot(bunch.Element, capacity);
+            if (slot != null && property != null && writer != null)
+            {
+                bunch.Binder.AddDisposable(property.Subscribe((slot, writer), static (data, ctx) => ctx.slot.SetWritten(data, ctx.writer)));
+            }
+            return slot;
+        }
+
+        public static FixedTextSlot ToFixedWritten<TElement, TData, TState>(
+            this ElementBunch<TElement> bunch,
+            Observable<TData> property,
+            int capacity,
+            TState state,
+            FixedTextWriter<(TData Data, TState State)> writer)
+            where TElement : TextElement
+        {
+            var slot = bunch.Binder.FixedSlot(bunch.Element, capacity);
+            if (slot != null && property != null && writer != null)
+            {
+                bunch.Binder.AddDisposable(property.Subscribe((slot, state, writer), static (data, ctx) => ctx.slot.SetWritten((data, ctx.state), ctx.writer)));
+            }
+            return slot;
+        }
+
+        private static FixedTextSlot BindFormatted<TElement, TValue>(
+            ElementBunch<TElement> bunch,
+            Observable<TValue> property,
+            int capacity,
+            string format)
+            where TElement : TextElement
+        {
+            var slot = bunch.Binder.FixedSlot(bunch.Element, capacity);
+            if (slot != null && property != null)
+            {
+                bunch.Binder.AddDisposable(property.Subscribe((slot, format), static (val, ctx) => ctx.slot.SetFormat(ctx.format, val)));
+            }
             return slot;
         }
     }
