@@ -1,215 +1,214 @@
-# SUIF DTO Standard & Zero-Realloc UI Architecture
+# SUIF Universal Data & Zero-Realloc UI Architecture
 
 > **Status:** Official SUIF Framework Standard (`com.reenbo.suif`)
 > **Target Engine:** Unity 6+ UI Toolkit (`UnityEngine.UIElements`)
 
 ---
 
-## 1. Why the DTO Standard Exists
+## 1. Why This Architecture Exists
 
-In standard MVVM UI implementations, two architectural problems frequently degrade both code maintainability and runtime frame pacing:
+In typical MVVM UI codebases, three issues degrade maintainability and runtime performance:
 
-1. **Visual Clutter in ViewModels & Views:** ViewModels build formatted display strings (`$"HP: {hp}/{maxHp}"`), construct hex codes, or select status labels. Views mix data transformation with UI Toolkit binding, making localization, theme switching, and unit testing difficult.
-2. **`AllocPage` Fragmentation in UI Toolkit:** Changing a `Label.text` string to a different length changes the number of generated font quads in Unity's UIR renderer (`MeshHandle`). When vertex/index counts grow or shrink dynamically, UI Toolkit invalidates contiguous `AllocPage` vertex buffer slots, allocates new buffers, and splits `DrawRange` batches—multiplying Draw Calls (`14–46 DC` instead of `2–4 DC`) and causing GC pressure.
+1. **Bloated ViewModels & Hardcoded Statics:** Business math, circular buffers, timestamps, and `static` lookup arrays accumulate in ViewModels alongside display strings (`$"HP: {hp}/{maxHp}"`), making serialization, `ScriptableObject` configs, server structs, and preset/locale switching awkward.
+2. **Rigid Data Constraints:** Forcing every UI payload to implement a framework-specific interface or `struct` prevents passing server payloads, POCOs, or local `ScriptableObject` assets directly.
+3. **`AllocPage` Fragmentation in UI Toolkit:** Changing `Label.text` length alters font quad counts (`MeshHandle`), invalidating `AllocPage` buffer slots and splitting `DrawRange` batches (`12–46 DC` instead of `2–4 DC`).
 
-The **SUIF DTO Standard** solves both problems simultaneously by enforcing a strict 4-layer data pipeline paired with fixed-capacity GPU mesh primitives.
+SUIF solves all three cleanly: **optional universal `TData` contracts**, **Domain Services + Thin ViewModels + Thin Views**, **DI-injected instance Formatters** (zero static mutable/data state), and **fixed-capacity GPU text/pool primitives**.
 
 ---
 
-## 2. The 4-Layer Data & Rendering Pipeline
+## 2. Clean 5-Layer Pipeline
 
 ```mermaid
 flowchart LR
-    VM["ViewModel (BaseViewModel)<br/>Pure State + Domain Commands"] -->|"ReactiveProperty&lt;TDto&gt;<br/>(struct : IViewDto)"| View["View (BaseDtoView / BaseView)<br/>Binder.ToDto + FixedElementPool"]
-    View -->|"ref Utf16ValueStringBuilder"| Fmt["TextFormatter<br/>FixedTextWriter&lt;TState&gt; + switch"]
-    Fmt -->|"ReadOnlySpan&lt;char&gt;"| Slot["FixedTextSlot / FixedSlotLabel<br/>Constant Vertex Count (0 DrawRange Breaks)"]
+    Svc["Domain Services & ScriptableObject<br/>Business Math, Catalogs, UniTask Preload"] -->|"State / Commands"| VM["Thin ViewModel (BaseViewModel)<br/>IReactiveDataViewModel&lt;TData&gt;"]
+    VM -->|"Observable&lt;TData&gt;<br/>(struct / class / ScriptableObject)"| View["Thin View (BaseReactiveDataView / BaseView)<br/>[Inject] ITextFormatter + Binder.FixedSlot"]
+    View -->|"ref Utf16ValueStringBuilder"| Fmt["DI Formatter Singleton<br/>Pre-cached FixedTextWriter&lt;T&gt; Delegates"]
+    Fmt -->|"ReadOnlySpan&lt;char&gt; (Attached Panel)"| Slot["FixedTextSlot / FixedSlotLabel<br/>Constant Vertex Count (0 DrawRange Breaks)"]
 ```
 
 | Layer | Responsibility | Strictly Prohibited |
 | :--- | :--- | :--- |
-| **1. DTO Contracts** (`struct : IViewDto`, `enum`) | Immutable value-type snapshots (`readonly struct`) representing UI state via strongly-typed fields and enums. | `UnityEngine.UIElements` references, pre-formatted UI strings, mutable reference collections. |
-| **2. ViewModel** (`BaseViewModel`) | Holds domain state, coordinates services, emits `ReactiveProperty<TDto>`, handles commands. | String interpolation (`$"..."`), `ZString.Format`, CSS class names, RichText tags, `Label` / `VisualElement` types. |
-| **3. Text Formatter** (`static class`) | Pure `FixedTextWriter<TState>` methods writing into `ref Utf16ValueStringBuilder` + zero-alloc `switch` expressions returning interned constants for enums. | Returning heap-allocated `string` per tick or update when formatting dynamic labels. |
-| **4. View** (`BaseDtoView<TViewModel, TDto>` / `BaseView<TViewModel>`) | Subscribes via `Binder.ToDto(...)`, toggles USS modifier classes, updates `FixedTextSlot` / `FixedSlotLabel`, and recycles DOM nodes via `FixedElementPool<TElement>`. | Domain/business calculations, per-click `container.Clear()` + `Add()`, raw `Label.text = $"..."` on dynamic labels. |
+| **1. Data Models** (`struct`, `class`, `ScriptableObject`, `enum`) | Pure data snapshots or configs from server, DB, or ScriptableObject assets. Zero forced dependency on `SUIF`. | `UnityEngine.UIElements` references, pre-formatted UI strings, USS class names. |
+| **2. Domain Services** (`Singleton` / `IShowcasePreloadable`) | Own all calculations, timers, lists, asset catalogs, and `UniTask.WhenAll` parallel preloading. | Manipulating UXML elements directly. |
+| **3. Thin ViewModel** (`BaseViewModel` / `IReactiveDataViewModel<TData>`) | Pure reactive facade forwarding `Observable<TData>` / `ReadOnlyReactiveProperty<TData>` and commands to services. | Loops, arithmetic math, circular buffer logic, timestamps, `static` data arrays, UI strings. |
+| **4. DI Formatter Service** (`Singleton`) | Instance service pre-allocating `FixedTextWriter<T>` delegates once in constructor + zero-alloc `switch` expressions for enum tokens. | Global `static` formatting state or per-update heap allocations. |
+| **5. Thin View** (`BaseReactiveDataView<TViewModel, TData>` / `BaseView<TViewModel>`) | Declares `[UQuery]` fields, registers slots via `Binder.FixedSlot(...)` & `FixedElementPool<TElement>`, injects `[Inject]` formatter, and wires bindings. | Business calculations, copy-pasted slot setup, `container.Clear()` + `Add()` loops, raw dynamic `.text = $"..."`. |
 
 ---
 
 ## 3. Core SUIF Framework Primitives
 
-### 3.1 `IViewDto` & `BaseDtoView<TViewModel, TDto>`
+### 3.1 Universal Constraint-Free Data Views & Bindings
 
-* `SUIF.API.IViewDto`: Marker interface for typed view state structs.
-* `SUIF.Base.BaseDtoView<TViewModel, TDto>`: Abstract view base constrained to `where TViewModel : class, IViewModel` and `where TDto : struct, IViewDto`, providing `protected abstract void RenderDto(in TDto dto)`.
-* `SUIF.R3.Extensions.DtoBindingExtensions`: Zero-closure reactive binding helpers on `ViewBinder`:
-  * `Binder.ToDto<TDto>(Observable<TDto> property, Action<TDto> onChanged)`
-  * `Binder.ToDto<TDto, TState>(Observable<TDto> property, TState state, Action<TDto, TState> onChanged)`
+Data contracts (`TData`) are **completely optional** and un-constrained—use `readonly struct`, reference `class`, or `ScriptableObject`:
 
-### 3.2 `FixedTextSlot` & `FixedSlotLabel`
+* **`SUIF.Base.BaseDataView<TViewModel, TData>`**: Abstract view inheriting `BaseView<TViewModel>` with `protected abstract void RenderData(TData data)`.
+* **`SUIF.R3.Base.IReactiveDataViewModel<TData>`** + **`BaseReactiveDataView<TViewModel, TData>`**: Optional reactive specialization that auto-subscribes `ViewModel.Data` (`Observable<TData>`) in `Bind()`, exposing clean `OnBind()` and `RenderData(TData data)` hooks without manual `Binder.ToData(...)` boilerplate.
+* **`SUIF.R3.Extensions.DataBindingExtensions`**:
+  * `Binder.ToData<TData>(Observable<TData> property, Action<TData> onChanged)`
+  * `Binder.ToData<TData, TState>(Observable<TData> property, TState state, Action<TData, TState> onChanged)`
+* **`SUIF.API.IUIDependencyResolver.Inject(object instance)`**: Called automatically by `ViewFactory` before `view.Initialize(viewModel)`, allowing Views to receive `[Inject]` presentation services (e.g. `ITextFormatter`) via VContainer without coupling ViewModels to formatting.
+
+### 3.2 `ViewBinder.FixedSlot`, `FixedTextSlot` & `FixedSlotLabel`
 
 Located in `SUIF.Binding` and `SUIF.Controls`:
 
-* **`FixedTextSlot`**: Wraps any `TextElement` (`Label`, `Button`, etc.) with a fixed character capacity (`capacity`, default `32`).
-  * Incoming text is padded up to `capacity` inside a `<size=0.01>000...</size>` suffix so Flexbox layout keeps its natural tight width without expanding empty space.
-  * During `PostProcessTextVertices`, padding glyph quads beyond the visible `parsedVisibleLength` (stripped of RichText `<...>` tags) are snapped to a degenerate point and assigned `alpha = 0`.
-  * Because total vertex and index counts stay constant (`cmd.indexCount`), UI Toolkit reuses the existing `AllocPage` slot in-place with **0 `DrawRange` breaks** and **0 heap allocations** (writes via `_target.SetText(_buffer, 0, writeIndex)`).
-  * Supports `SetText(string)`, `SetText(ReadOnlySpan<char>)`, `SetFormat<T1>(...)`, `SetFormat<T1, T2>(...)`, and `SetWritten<TState>(TState state, FixedTextWriter<TState> writer)` using a thread-local `ZString` builder.
-* **`FixedSlotLabel`**: Drop-in UXML control (`[UxmlElement("FixedSlotLabel")]`) with `[UxmlAttribute("capacity")] int Capacity`, exposing `SetFixedText`, `SetFixedFormat`, and `SetFixedWritten`.
-* **`LabelBindingExtensions.ToFixedText`**: Reactive `ElementBunch<TElement>` extensions (`ToFixedText(Observable<string|int|long|float>, capacity, format)`).
-
-> [!NOTE]
-> Always size `capacity` to the worst-case visible glyph count (excluding `<color=...>` / `<b>` RichText tags and `\r`/`\n` newlines, which `FixedTextSlot` accounts for separately when tracking `emittedQuadCount` vs `parsedVisibleLength`).
+* **`Binder.FixedSlot(TextElement element, int capacity = 32)`**: Centralized slot factory & disposal registration on `ViewBinder` (automatically reuses `FixedSlotLabel.Slot` if targeting a `FixedSlotLabel`), eliminating per-View helper boilerplate.
+* **`FixedTextSlot`**: Wraps any `TextElement` with fixed character capacity (`capacity`):
+  * Pads trailing capacity inside `<size=0.01>000...</size>` (tight layout width) and collapses padding glyph quads in `PostProcessTextVertices` (`alpha = 0`), preserving constant vertex/index counts (**0 `DrawRange` splits**).
+  * **Deferred Panel Attach Flush**: When `SetText` is called while `_target.panel == null` (e.g., constructing detached pooled rows), writes stay buffered in `_buffer` and flush zero-alloc once `AttachToPanelEvent` fires—eliminating Unity's `"not attached to a panel. Falling back to string allocation"` warning and heap allocation.
+* **`FixedSlotLabel`**: Drop-in UXML control (`[UxmlElement("FixedSlotLabel")]`, `IDisposable`) with `[UxmlAttribute("capacity")] int Capacity`.
+* **`LabelBindingExtensions`**:
+  * `Binder.Bind(element).ToFixedText(...)` (for `string`, `int`, `long`, `float`)
+  * `Binder.Bind(element).ToFixedWritten<TElement, TData>(property, capacity, writer)` and `ToFixedWritten<TElement, TData, TState>(property, capacity, state, writer)` *(zero-closure, zero-`string.Format`)*.
 
 ### 3.3 `FixedElementPool<TElement>`
 
 Located in `SUIF.Binding`:
 
-* Pre-allocates `capacity` elements once during `Bind()` via `factory(int index)` and adds them to `container` up front.
-* Updates active slices on state change without DOM destruction:
-  * `Render(int activeCount, Action<TElement, int> onBind)`
-  * `Render<TState>(int activeCount, TState state, Action<TElement, int, TState> onBind)` *(zero-closure overload)*
-* Uses `DisplayStyle.Flex` / `DisplayStyle.None` by default so inactive slots leave the layout cleanly without forcing dynamic vertex buffer reallocations across frames.
-
-> [!IMPORTANT]
-> Keep `DisplayStyle.None` for pooled/cached inactive views rather than `Visibility.Hidden`. Measured Play Mode profiling on cached windows showed that `Visibility.Hidden` retains hidden geometry in the render tree and spikes Draw Calls on restore (`27 DC` vs `16 DC` with `DisplayStyle.None`).
+* Pre-allocates `capacity` elements once during `Bind()` / `OnBind()` and toggles visibility with `DisplayStyle.None` via `Render(activeCount, ...)` and zero-closure `Render<TState>(activeCount, state, ...)`.
+* Keep `DisplayStyle.None` rather than `Visibility.Hidden` for cached/inactive views (`Visibility.Hidden` retains transparent geometry and spiked Draw Calls `27 DC` vs `16 DC`).
 
 ---
 
 ## 4. Reference Implementation Pattern
 
-### Step 1: Define Typed DTO Contract
+### Step 1: Data Contract (Plain Struct, POCO, or `ScriptableObject`)
 ```csharp
-using SUIF.API;
+public enum InventoryRarity : byte { Common, Rare, Legendary }
 
-namespace MyGame.UI.Contracts
+public readonly struct InventoryInspectorDto
 {
-    public enum InventoryRarity : byte
-    {
-        Common,
-        Rare,
-        Legendary
-    }
+    public readonly int ItemId;
+    public readonly int PowerScore;
+    public readonly InventoryRarity Rarity;
 
-    public readonly struct InventoryInspectorDto : IViewDto
+    public InventoryInspectorDto(int itemId, int powerScore, InventoryRarity rarity)
     {
-        public readonly int ItemId;
-        public readonly int PowerScore;
-        public readonly InventoryRarity Rarity;
-
-        public InventoryInspectorDto(int itemId, int powerScore, InventoryRarity rarity)
-        {
-            ItemId = itemId;
-            PowerScore = powerScore;
-            Rarity = rarity;
-        }
+        ItemId = itemId;
+        PowerScore = powerScore;
+        Rarity = rarity;
     }
 }
 ```
 
-### Step 2: Emit DTO from ViewModel (Zero UI Strings)
-```csharp
-using R3;
-using SUIF.Base;
-
-namespace MyGame.UI.Inventory
-{
-    public sealed class InventoryViewModel : BaseViewModel
-    {
-        public ReactiveProperty<InventoryInspectorDto> State { get; } = new(
-            new InventoryInspectorDto(101, 320, InventoryRarity.Rare));
-
-        public void SelectItem(int itemId, int powerScore, InventoryRarity rarity)
-        {
-            State.Value = new InventoryInspectorDto(itemId, powerScore, rarity);
-        }
-
-        public override void Dispose()
-        {
-            State.Dispose();
-        }
-    }
-}
-```
-
-### Step 3: Format Text in a Dedicated `FixedTextWriter<TState>` Formatter
+### Step 2: Injectable Formatter Singleton (Zero Static State)
 ```csharp
 using Cysharp.Text;
+using SUIF.Binding;
 
-namespace MyGame.UI.Formatting
+public interface IInventoryTextFormatter
 {
-    public static class InventoryTextFormatter
-    {
-        public static void WritePowerScore(ref Utf16ValueStringBuilder builder, InventoryInspectorDto dto)
-        {
-            builder.Append('+');
-            builder.Append(dto.PowerScore);
-            builder.Append(" PWR");
-        }
+    FixedTextWriter<InventoryInspectorDto> PowerScore { get; }
+    FixedTextWriter<InventoryRarity> RarityBadge { get; }
+}
 
-        public static string GetRarityToken(InventoryRarity rarity) => rarity switch
+public sealed class InventoryTextFormatter : IInventoryTextFormatter
+{
+    public FixedTextWriter<InventoryInspectorDto> PowerScore { get; }
+    public FixedTextWriter<InventoryRarity> RarityBadge { get; }
+
+    public InventoryTextFormatter()
+    {
+        PowerScore = WritePowerScore;
+        RarityBadge = WriteRarityBadge;
+    }
+
+    private void WritePowerScore(ref Utf16ValueStringBuilder sb, InventoryInspectorDto dto)
+    {
+        sb.Append('+');
+        sb.Append(dto.PowerScore);
+        sb.Append(" PWR");
+    }
+
+    private void WriteRarityBadge(ref Utf16ValueStringBuilder sb, InventoryRarity rarity)
+    {
+        sb.Append(rarity switch
         {
             InventoryRarity.Rare => "[RARE]",
             InventoryRarity.Legendary => "[LEGENDARY]",
             _ => "[COMMON]"
-        };
+        });
     }
 }
 ```
 
-### Step 4: Render DTO in View (`BaseDtoView` + `FixedTextSlot`)
+### Step 3: Thin ViewModel (`IReactiveDataViewModel<TData>`)
+```csharp
+using R3;
+using SUIF.Base;
+using SUIF.R3.Base;
+
+public sealed class InventoryViewModel : BaseViewModel, IReactiveDataViewModel<InventoryInspectorDto>
+{
+    private readonly IInventoryService _inventoryService;
+
+    public Observable<InventoryInspectorDto> Data => _inventoryService.State;
+
+    public InventoryViewModel(IInventoryService inventoryService)
+    {
+        _inventoryService = inventoryService;
+    }
+
+    public void SelectSlot(int index) => _inventoryService.SelectSlot(index);
+}
+```
+
+### Step 4: Thin View (`BaseReactiveDataView` + `[Inject]` Formatter + `Binder.FixedSlot`)
 ```csharp
 using SUIF.Attributes;
-using SUIF.Base;
 using SUIF.Binding;
-using SUIF.R3.Extensions;
+using SUIF.R3.Base;
 using UnityEngine.UIElements;
+using VContainer;
 
-namespace MyGame.UI.Inventory
+[UIView("InventoryView", SUIF.API.UILayer.Windows, UILoadingMode.Cached)]
+public sealed class InventoryView : BaseReactiveDataView<InventoryViewModel, InventoryInspectorDto>
 {
-    [UIView("InventoryView", SUIF.API.UILayer.Windows)]
-    public sealed class InventoryView : BaseDtoView<InventoryViewModel, InventoryInspectorDto>
+    [UQuery("lbl-rarity")] private Label _rarityLabel;
+    [UQuery("lbl-power")] private Label _powerLabel;
+
+    private IInventoryTextFormatter _formatter;
+    private FixedTextSlot _raritySlot;
+    private FixedTextSlot _powerSlot;
+
+    public InventoryView(VisualElement root) : base(root) { }
+
+    [Inject]
+    public void Construct(IInventoryTextFormatter formatter) => _formatter = formatter;
+
+    protected override void OnBind()
     {
-        [UQuery("lbl-rarity")] private Label _rarityLabel;
-        [UQuery("lbl-power")] private Label _powerLabel;
+        _raritySlot = Binder.FixedSlot(_rarityLabel, 16);
+        _powerSlot = Binder.FixedSlot(_powerLabel, 16);
+    }
 
-        private FixedTextSlot _raritySlot;
-        private FixedTextSlot _powerSlot;
-
-        public InventoryView(VisualElement root) : base(root) { }
-
-        protected override void Bind()
-        {
-            _raritySlot = new FixedTextSlot(_rarityLabel, capacity: 16);
-            _powerSlot = new FixedTextSlot(_powerLabel, capacity: 16);
-            AddDisposable(_raritySlot);
-            AddDisposable(_powerSlot);
-
-            Binder.ToDto(ViewModel.State, this, static (dto, view) => view.RenderDto(in dto));
-        }
-
-        protected override void RenderDto(in InventoryInspectorDto dto)
-        {
-            _raritySlot.SetText(InventoryTextFormatter.GetRarityToken(dto.Rarity));
-            _powerSlot.SetWritten(dto, InventoryTextFormatter.WritePowerScore);
-        }
+    protected override void RenderData(InventoryInspectorDto dto)
+    {
+        _raritySlot?.SetWritten(dto.Rarity, _formatter.RarityBadge);
+        _powerSlot?.SetWritten(dto, _formatter.PowerScore);
     }
 }
 ```
 
 ---
 
-## 5. Measured Production Results (`SUIF_APPEARENCE` Showcase)
+## 5. Async / Parallel Preloading With `LoadingSpinnerView`
 
-Validated across all 6 Showcase modules in Unity 6 (`DX12` Play Mode + automated `8s` benchmark):
+For heavy catalogs or server fetches (`ScriptableObject` deserialization, `10k+` node arrays), inject preloadable services implementing a shared preload contract into an orchestrator using a pre-allocated `UniTask[]` buffer and `UniTask.WhenAll(...)`:
 
-* **Draw Calls (Settled):** Reduced from `12–46 DC` spikes down to **`2–4 DC`** across Frame, Theme Switcher, Lifecycle, Reactive Counter, Inventory, and Modal overlays.
-* **Frame Rate & GC:** **`457.3 FPS`** average (`2.19 ms` frame time, `271.5 FPS` 1% low) with **`0.007 MB` (~7 KB)** total managed allocation across **`3,663` frames**.
-* **Batch Stability:** Dynamic text updates, button diagonal wipes, and pooled log/inventory slot switching produce **0 `DrawRange` splits** and **0 console errors**.
+* Open a cached `LoadingSpinnerView` on `UILayer.Topmost` (`await _uiFlow.OpenAsync<LoadingSpinnerView>(ct)`).
+* Run `await UniTask.WhenAll(_taskBuffer)` in parallel.
+* Close cleanly inside `finally { _uiFlow.Close<LoadingSpinnerView>(); }`.
+* Render spinner frames through `FixedTextSlot` (e.g. `[|]`, `[/]`, `[-]`, `[\]`) rather than rotated DOM transforms so the loading overlay adds zero stencil/matrix Draw Call overhead.
 
 ---
 
 ## 6. Anti-Patterns Checklist
 
-* **NEVER** assign raw interpolated strings (`_label.text = $"HP: {hp}"`) on dynamically changing UI labels—always use `FixedTextSlot`, `FixedSlotLabel`, or `ToFixedText`.
-* **NEVER** return formatted UI sentences or color/style strings from a ViewModel—emit a `struct : IViewDto` containing domain primitives and enums.
-* **NEVER** allocate heap closures in `Binder.ToDto`, `FixedElementPool.Render`, or `FixedTextSlot.SetWritten`—pass `this` or the DTO via the `TState` parameter and use `static` lambdas or method groups.
-* **NEVER** call `container.Clear()` + `new VisualElement()` on repeated list/log updates—pre-allocate a `FixedElementPool<TElement>` once in `Bind()`.
+* **NEVER** put arithmetic, loops, timestamps, or `static` data arrays inside a `ViewModel`—keep them in Domain Services or `ScriptableObject` assets.
+* **NEVER** force domain structs/assets to implement framework marker interfaces (`TData` works with any `struct`, `class`, or `ScriptableObject`).
+* **NEVER** duplicate `RegisterFixedSlot` helpers in Views—use `Binder.FixedSlot(element, capacity)`.
+* **NEVER** create `static class *Formatter` globals with mutable formatting rules—use injectable Singleton formatters caching `FixedTextWriter<T>` delegates at startup.
+* **NEVER** mutate dynamic `Label.text` directly or call `container.Clear()` + `new VisualElement()` on updates—use `FixedTextSlot`, `FixedSlotLabel`, and `FixedElementPool<TElement>`.

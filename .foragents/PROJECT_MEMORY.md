@@ -17,9 +17,10 @@
 - [x] Implemented 1-click Window Wizard Editor tool (`Tools > SUIF > Create UI Window Wizard...`).
 - [x] Created all 5 UPM Samples in `Samples~/`.
 - [x] **feature/suif-autonomy-universality**: Audited and enforced complete UPM autonomy: eliminated host project leaks in USS/TSS, made Window Generator universal, removed unused InputSystem dependency in Core, provided separate RegisterDirectAssetProvider extension to prevent scope shadowing.
-- [x] **DTO Standard & Zero-Realloc UI Primitives (`679ffba`, `ff8df59`, `fbcfc6e`)**:
-  - Added `IViewDto`, `BaseDtoView<TViewModel, TDto>`, `FixedTextWriter<in TState>`, `FixedTextSlot`, `FixedSlotLabel` (`[UxmlElement("FixedSlotLabel")]`), `FixedElementPool<TElement>`, `DtoBindingExtensions.ToDto`, and `LabelBindingExtensions.ToFixedText`.
-  - Authored official documentation for humans (`Documentation~/DTO_Standard_And_ZeroAlloc_UI.md`) and AI agents (`Documentation~/AI_Guidelines_DTO_And_ZeroAlloc.md`), cross-linked in `Architecture.md`, `Performance_And_Optimization.md`, and `README.md`.
+- [x] **Universal Data & Zero-Realloc UI Standard (`84986e8`, `d81b0c0`, `12e1243`, `bca2c02`, `377751c`)**:
+  - Replaced rigid `IViewDto`/`BaseDtoView` with constraint-free `BaseDataView<TViewModel, TData>`, `IReactiveDataViewModel<TData>`, `BaseReactiveDataView<TViewModel, TData>`, and `DataBindingExtensions.ToData` (supporting `struct`, `class`, and `ScriptableObject`).
+  - Added `ViewBinder.FixedSlot`, `FixedSlotLabel.Slot` + `IDisposable`, zero-closure `LabelBindingExtensions.ToFixedWritten`, `AttachToPanelEvent` deferral in `FixedTextSlot` (eliminating detached string-fallback warnings), and `IUIDependencyResolver.Inject` in `ViewFactory`.
+  - Updated official docs in `Documentation~/DTO_Standard_And_ZeroAlloc_UI.md`, `Documentation~/AI_Guidelines_DTO_And_ZeroAlloc.md`, and `Architecture.md`.
 - [ ] **Next**: Keep `SUIF` docs and primitives synced with theme/formatting evolutions in host showcase.
 
 ---
@@ -48,8 +49,8 @@
   6. Strict restriction on `static`: Only stateless generic caches (`UIViewAttributeCache<T>`).
   7. No magic strings: Extracted into constants.
   8. Strict prohibition of LINQ: Manual indexed loops and break statements.
-  9. Constant-capacity text & DOM pools: Dynamic text MUST use `FixedTextSlot` / `FixedSlotLabel` / `ToFixedText` and `FixedTextWriter<TState>`; repeated lists MUST use `FixedElementPool<TElement>` with `DisplayStyle.None` (`BaseView.Hide()` MUST NOT use `Visibility.Hidden`).
-  10. DTO Standard: ViewModels emit `struct : IViewDto` via `ReactiveProperty<TDto>`; UI formatting lives strictly in `FixedTextWriter<TState>` formatters (`BaseDtoView<TViewModel, TDto>` + `Binder.ToDto`).
+  9. Constant-capacity text & DOM pools: Dynamic text MUST use `Binder.FixedSlot` / `FixedTextSlot` / `FixedSlotLabel` / `ToFixedWritten` and `FixedTextWriter<TState>`; repeated lists MUST use `FixedElementPool<TElement>` with `DisplayStyle.None` (`BaseView.Hide()` MUST NOT use `Visibility.Hidden`).
+  10. Optional Universal Data & Thin MVVM: ViewModels delegate math/data to Domain Services / `ScriptableObject`s and emit any `TData` via `ToData` / `BaseReactiveDataView` (no forced `IViewDto` marker); UI formatting lives in injectable DI Formatter Singletons.
 * **UI Toolkit Engine Gotchas**:
   * `TemplateContainer` 0x0 collapse fix: `.l-layer > * { flex-grow: 1; }`.
   * `picking-mode` is a UXML attribute, NOT a USS property: set `picking-mode="Ignore"` inline in UXML.

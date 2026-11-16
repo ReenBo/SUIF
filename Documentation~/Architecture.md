@@ -25,13 +25,14 @@ graph TD
 
 ## 🧱 Core Subsystems
 
-### 1. MVVM, DTO Contracts & Separation of Concerns
-* **DTO Contracts (`struct : IViewDto`)**: Pure immutable value-type state snapshots containing only domain primitives and enums—zero UI strings or `UIElements` dependencies.
-* **ViewModel (`BaseViewModel`)**: Pure C# POCO classes containing domain state, commands, and `ReactiveProperty<TDto>` streams. Cleanly decoupled from UI formatting and CSS tokens.
-* **Text Formatter (`FixedTextWriter<TState>`)**: Pure `ZString` formatters and zero-allocation `switch` expressions converting DTO values into formatted character spans.
-* **View (`BaseDtoView<TViewModel, TDto>` / `BaseView<TViewModel>`)**: Pure UI Toolkit binding logic (`Binder.ToDto`), `FixedTextSlot` / `FixedSlotLabel` text slots, and `FixedElementPool<TElement>` DOM pools. Views are never MonoBehaviours!
-* **Binding Layer (`ViewBinder`)**: Zero-allocation reactive bridge between ViewModel and View (`DtoBindingExtensions`, `LabelBindingExtensions`).
-* **Detailed Guide**: See [DTO Standard & Zero-Realloc UI Architecture](DTO_Standard_And_ZeroAlloc_UI.md) and [AI Agent Specification](AI_Guidelines_DTO_And_ZeroAlloc.md).
+### 1. MVVM, Optional Data Contracts & Separation of Concerns
+* **Domain Services & `ScriptableObject`s**: Own all business logic, counters, catalogs, calculations, and parallel `UniTask.WhenAll` preloading.
+* **Data Contracts (Optional)**: Any `readonly struct`, POCO `class`, or `ScriptableObject` representing UI state—zero forced dependency on `SUIF` interfaces.
+* **Thin ViewModel (`BaseViewModel` / `IReactiveDataViewModel<TData>`)**: Pure C# POCO facade forwarding reactive streams and commands to Domain Services without calculations or UI strings.
+* **Injectable Text Formatter (`Singleton`)**: Instance service pre-caching `FixedTextWriter<T>` delegates at startup to format data spans zero-alloc.
+* **Thin View (`BaseReactiveDataView<TViewModel, TData>` / `BaseDataView<TViewModel, TData>` / `BaseView<TViewModel>`)**: Declares `[UQuery]` fields, registers `Binder.FixedSlot(...)` and `FixedElementPool<TElement>`, and receives DI formatters via `IUIDependencyResolver.Inject` (`[Inject]`).
+* **Binding Layer (`ViewBinder`)**: Zero-allocation reactive bridge (`DataBindingExtensions.ToData`, `LabelBindingExtensions.ToFixedText` / `ToFixedWritten`).
+* **Detailed Guide**: See [Universal Data & Zero-Realloc UI Architecture](DTO_Standard_And_ZeroAlloc_UI.md) and [AI Agent Specification](AI_Guidelines_DTO_And_ZeroAlloc.md).
 
 ### 2. Scoped Window Lifecycle & Layers
 Windows are assigned to distinct layers via the `[UIView]` attribute:
