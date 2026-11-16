@@ -13,8 +13,8 @@
 2. **Thin ViewModel & Thin View Separation**
    * **Domain Services / `ScriptableObject`s**: Own all calculations, counters, sorting/filtering, timestamps, data arrays, and async `UniTask.WhenAll` preloading.
    * **ViewModel (`BaseViewModel`)**: Thin reactive adapter only—exposes `Observable<TData>` / `ReadOnlyReactiveProperty<TData>` (implementing `IReactiveDataViewModel<TData>` for single-payload Views) and forwards commands to Domain Services. MUST contain zero loops, arithmetic, `static` data arrays, or UI strings.
-   * **Formatter Service (`Singleton`)**: Injectable DI instance (`ITextFormatter`) that pre-caches `FixedTextWriter<T>` delegates once in its constructor at startup. Avoid `static` formatter classes so presets/locales can swap dynamically without global state.
-   * **View (`BaseReactiveDataView<TViewModel, TData>` or `BaseView<TViewModel>`)**: Declares `[UQuery]` UI fields, registers slots via `Binder.FixedSlot(...)` & `FixedElementPool<TElement>`, receives formatter via `[Inject] Construct(...)`, and wires bindings cleanly in `OnBind()` / `Bind()`.
+   * **Formatter Service (`Singleton`)**: Injectable DI instance (`ITextFormatter`) that pre-caches `FixedTextWriter<T>` delegates once in its constructor at startup. Inject into the `ViewModel` and expose read-only (`ViewModel.Formatter`), never directly via `[Inject]` on Views. Avoid `static` formatter classes so presets/locales can swap dynamically without global state.
+   * **View (`BaseReactiveDataView<TViewModel, TData>` or `BaseView<TViewModel>`)**: Container-agnostic UI binding layer ONLY—declares `[UQuery]` fields, registers slots via `Binder.FixedSlot(...)` & `FixedElementPool<TElement>`, and binds purely against `ViewModel` (`using VContainer;` / `[Inject]` inside Views is strictly forbidden).
 
 3. **Zero-Realloc Text Rendering (`ViewBinder.FixedSlot` / `FixedSlotLabel`)**
    * Register slots via `Binder.FixedSlot(element, capacity)` instead of writing local helper methods per View.
@@ -33,7 +33,7 @@
 - [ ] Zero `$"..."` or `string.Format` in any `*ViewModel.cs` or `*View.cs`.
 - [ ] Zero business calculations, counters, timestamps, or `static` data arrays in any `*ViewModel.cs`.
 - [ ] Zero forced marker interfaces (`IViewDto`) or `struct` restrictions blocking `ScriptableObject` / class payloads.
-- [ ] Single-payload Views use `BaseReactiveDataView<TViewModel, TData>` + `IReactiveDataViewModel<TData>`; slots use `Binder.FixedSlot(...)`.
+- [ ] Single-payload Views use `BaseReactiveDataView<TViewModel, TData>` + `IReactiveDataViewModel<TData>`; slots use `Binder.FixedSlot(...)`; Views contain ZERO `[Inject]` attributes or `using VContainer;`.
 - [ ] Zero `//` or `/* */` comments in C# source files (per project style).
 - [ ] Script recompilation (`compilationFailed: false`), EditMode tests, and Play Mode (`US.dc` settled, `0` console warnings/errors, `game_view`) pass.
 

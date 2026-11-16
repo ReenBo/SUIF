@@ -17,9 +17,9 @@
 - [x] Implemented 1-click Window Wizard Editor tool (`Tools > SUIF > Create UI Window Wizard...`).
 - [x] Created all 5 UPM Samples in `Samples~/`.
 - [x] **feature/suif-autonomy-universality**: Audited and enforced complete UPM autonomy: eliminated host project leaks in USS/TSS, made Window Generator universal, removed unused InputSystem dependency in Core, provided separate RegisterDirectAssetProvider extension to prevent scope shadowing.
-- [x] **Universal Data & Zero-Realloc UI Standard (`84986e8`, `d81b0c0`, `12e1243`, `bca2c02`, `377751c`)**:
+- [x] **Universal Data & Zero-Realloc UI Standard (`84986e8`, `d81b0c0`, `12e1243`, `377751c`, `e08ef91`)**:
   - Replaced rigid `IViewDto`/`BaseDtoView` with constraint-free `BaseDataView<TViewModel, TData>`, `IReactiveDataViewModel<TData>`, `BaseReactiveDataView<TViewModel, TData>`, and `DataBindingExtensions.ToData` (supporting `struct`, `class`, and `ScriptableObject`).
-  - Added `ViewBinder.FixedSlot`, `FixedSlotLabel.Slot` + `IDisposable`, zero-closure `LabelBindingExtensions.ToFixedWritten`, `AttachToPanelEvent` deferral in `FixedTextSlot` (eliminating detached string-fallback warnings), and `IUIDependencyResolver.Inject` in `ViewFactory`.
+  - Added `ViewBinder.FixedSlot`, `FixedSlotLabel.Slot` + `IDisposable`, zero-closure `LabelBindingExtensions.ToFixedWritten`, `AttachToPanelEvent` deferral in `FixedTextSlot` (eliminating detached string-fallback warnings), and kept `ViewFactory` / Views strictly container-agnostic (zero `[Inject]` inside Views).
   - Updated official docs in `Documentation~/DTO_Standard_And_ZeroAlloc_UI.md`, `Documentation~/AI_Guidelines_DTO_And_ZeroAlloc.md`, and `Architecture.md`.
 - [ ] **Next**: Keep `SUIF` docs and primitives synced with theme/formatting evolutions in host showcase.
 

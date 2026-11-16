@@ -30,7 +30,7 @@ graph TD
 * **Data Contracts (Optional)**: Any `readonly struct`, POCO `class`, or `ScriptableObject` representing UI state—zero forced dependency on `SUIF` interfaces.
 * **Thin ViewModel (`BaseViewModel` / `IReactiveDataViewModel<TData>`)**: Pure C# POCO facade forwarding reactive streams and commands to Domain Services without calculations or UI strings.
 * **Injectable Text Formatter (`Singleton`)**: Instance service pre-caching `FixedTextWriter<T>` delegates at startup to format data spans zero-alloc.
-* **Thin View (`BaseReactiveDataView<TViewModel, TData>` / `BaseDataView<TViewModel, TData>` / `BaseView<TViewModel>`)**: Declares `[UQuery]` fields, registers `Binder.FixedSlot(...)` and `FixedElementPool<TElement>`, and receives DI formatters via `IUIDependencyResolver.Inject` (`[Inject]`).
+* **Thin View (`BaseReactiveDataView<TViewModel, TData>` / `BaseDataView<TViewModel, TData>` / `BaseView<TViewModel>`)**: Container-agnostic UI binding layer declaring `[UQuery]` fields, registering `Binder.FixedSlot(...)` and `FixedElementPool<TElement>`, and binding strictly to `ViewModel` (zero `[Inject]` or DI container references).
 * **Binding Layer (`ViewBinder`)**: Zero-allocation reactive bridge (`DataBindingExtensions.ToData`, `LabelBindingExtensions.ToFixedText` / `ToFixedWritten`).
 * **Detailed Guide**: See [Universal Data & Zero-Realloc UI Architecture](DTO_Standard_And_ZeroAlloc_UI.md) and [AI Agent Specification](AI_Guidelines_DTO_And_ZeroAlloc.md).
 

@@ -22,7 +22,7 @@ SUIF solves all three cleanly: **optional universal `TData` contracts**, **Domai
 ```mermaid
 flowchart LR
     Svc["Domain Services & ScriptableObject<br/>Business Math, Catalogs, UniTask Preload"] -->|"State / Commands"| VM["Thin ViewModel (BaseViewModel)<br/>IReactiveDataViewModel&lt;TData&gt;"]
-    VM -->|"Observable&lt;TData&gt;<br/>(struct / class / ScriptableObject)"| View["Thin View (BaseReactiveDataView / BaseView)<br/>[Inject] ITextFormatter + Binder.FixedSlot"]
+    VM -->|"Observable&lt;TData&gt;<br/>(struct / class / ScriptableObject)"| View["Thin View (BaseReactiveDataView / BaseView)<br/>Container-Agnostic + Binder.FixedSlot"]
     View -->|"ref Utf16ValueStringBuilder"| Fmt["DI Formatter Singleton<br/>Pre-cached FixedTextWriter&lt;T&gt; Delegates"]
     Fmt -->|"ReadOnlySpan&lt;char&gt; (Attached Panel)"| Slot["FixedTextSlot / FixedSlotLabel<br/>Constant Vertex Count (0 DrawRange Breaks)"]
 ```
@@ -33,7 +33,7 @@ flowchart LR
 | **2. Domain Services** (`Singleton` / `IShowcasePreloadable`) | Own all calculations, timers, lists, asset catalogs, and `UniTask.WhenAll` parallel preloading. | Manipulating UXML elements directly. |
 | **3. Thin ViewModel** (`BaseViewModel` / `IReactiveDataViewModel<TData>`) | Pure reactive facade forwarding `Observable<TData>` / `ReadOnlyReactiveProperty<TData>` and commands to services. | Loops, arithmetic math, circular buffer logic, timestamps, `static` data arrays, UI strings. |
 | **4. DI Formatter Service** (`Singleton`) | Instance service pre-allocating `FixedTextWriter<T>` delegates once in constructor + zero-alloc `switch` expressions for enum tokens. | Global `static` formatting state or per-update heap allocations. |
-| **5. Thin View** (`BaseReactiveDataView<TViewModel, TData>` / `BaseView<TViewModel>`) | Declares `[UQuery]` fields, registers slots via `Binder.FixedSlot(...)` & `FixedElementPool<TElement>`, injects `[Inject]` formatter, and wires bindings. | Business calculations, copy-pasted slot setup, `container.Clear()` + `Add()` loops, raw dynamic `.text = $"..."`. |
+| **5. Thin View** (`BaseReactiveDataView<TViewModel, TData>` / `BaseView<TViewModel>`) | Declares `[UQuery]` fields, registers slots via `Binder.FixedSlot(...)` & `FixedElementPool<TElement>`, and binds purely against `ViewModel` (`ViewModel.Formatter` pass-through). | `[Inject]` / DI container dependencies, business calculations, copy-pasted slot setup, `container.Clear()` + `Add()` loops, raw dynamic `.text = $"..."`. |
 
 ---
 
@@ -48,7 +48,7 @@ Data contracts (`TData`) are **completely optional** and un-constrained—use `r
 * **`SUIF.R3.Extensions.DataBindingExtensions`**:
   * `Binder.ToData<TData>(Observable<TData> property, Action<TData> onChanged)`
   * `Binder.ToData<TData, TState>(Observable<TData> property, TState state, Action<TData, TState> onChanged)`
-* **`SUIF.API.IUIDependencyResolver.Inject(object instance)`**: Called automatically by `ViewFactory` before `view.Initialize(viewModel)`, allowing Views to receive `[Inject]` presentation services (e.g. `ITextFormatter`) via VContainer without coupling ViewModels to formatting.
+* **Container-Agnostic Views:** Views never depend on DI containers or `[Inject]`. Formatters (`ITextFormatter` Singletons) are injected into the `ViewModel` constructor and exposed read-only via `ViewModel.Formatter` for clean UI binding without View-side injection.
 
 ### 3.2 `ViewBinder.FixedSlot`, `FixedTextSlot` & `FixedSlotLabel`
 
@@ -144,24 +144,25 @@ public sealed class InventoryViewModel : BaseViewModel, IReactiveDataViewModel<I
 {
     private readonly IInventoryService _inventoryService;
 
+    public IInventoryTextFormatter Formatter { get; }
     public Observable<InventoryInspectorDto> Data => _inventoryService.State;
 
-    public InventoryViewModel(IInventoryService inventoryService)
+    public InventoryViewModel(IInventoryService inventoryService, IInventoryTextFormatter formatter)
     {
         _inventoryService = inventoryService;
+        Formatter = formatter;
     }
 
     public void SelectSlot(int index) => _inventoryService.SelectSlot(index);
 }
 ```
 
-### Step 4: Thin View (`BaseReactiveDataView` + `[Inject]` Formatter + `Binder.FixedSlot`)
+### Step 4: Thin View (`BaseReactiveDataView` + `Binder.FixedSlot`, Zero DI Imports)
 ```csharp
 using SUIF.Attributes;
 using SUIF.Binding;
 using SUIF.R3.Base;
 using UnityEngine.UIElements;
-using VContainer;
 
 [UIView("InventoryView", SUIF.API.UILayer.Windows, UILoadingMode.Cached)]
 public sealed class InventoryView : BaseReactiveDataView<InventoryViewModel, InventoryInspectorDto>
@@ -169,14 +170,10 @@ public sealed class InventoryView : BaseReactiveDataView<InventoryViewModel, Inv
     [UQuery("lbl-rarity")] private Label _rarityLabel;
     [UQuery("lbl-power")] private Label _powerLabel;
 
-    private IInventoryTextFormatter _formatter;
     private FixedTextSlot _raritySlot;
     private FixedTextSlot _powerSlot;
 
     public InventoryView(VisualElement root) : base(root) { }
-
-    [Inject]
-    public void Construct(IInventoryTextFormatter formatter) => _formatter = formatter;
 
     protected override void OnBind()
     {
@@ -186,8 +183,9 @@ public sealed class InventoryView : BaseReactiveDataView<InventoryViewModel, Inv
 
     protected override void RenderData(InventoryInspectorDto dto)
     {
-        _raritySlot?.SetWritten(dto.Rarity, _formatter.RarityBadge);
-        _powerSlot?.SetWritten(dto, _formatter.PowerScore);
+        var formatter = ViewModel.Formatter;
+        _raritySlot?.SetWritten(dto.Rarity, formatter.RarityBadge);
+        _powerSlot?.SetWritten(dto, formatter.PowerScore);
     }
 }
 ```
