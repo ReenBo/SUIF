@@ -46,13 +46,14 @@ flowchart LR
 * **Never leave `atlasPadding == 0`**: zero padding prevents proper SDF distance field spread, degrading antialiasing and corrupting outlines/shadows.
 * Avoid bitmap modes (`RASTER*`, `SMOOTH*`) when typography spans multiple `font-size` tiers, as every distinct font size rasterizes separate glyph bitmaps.
 
-### 2.3. `AtlasPopulationMode.Static` & Single-Atlas Consolidation
+### 2.3. Unity 6.5+/6.6 ATG: Pre-Populated `Dynamic` & Single-Atlas Consolidation
+In Unity 6.5+ / 6.6 (`6000.6.7f1`), UI Toolkit enables the **Advanced Text Generator (ATG)** by default, which **rejects `AtlasPopulationMode.Static`** (`"Advanced text system cannot render using static font asset"`).
+
 * For bounded UI character sets (ASCII, Cyrillic, fixed localization alphabets, curated HUD icons):
-  * Set **`Atlas Population Mode = Static`**
-  * Set **`isMultiAtlasTexturesEnabled = false`** (`atlasTextures.Length == 1`)
-  * Pack **all** required UXML, USS, and C# formatter glyphs into that single atlas texture at build/authoring time.
-* **Strictly forbid `DynamicOS`** and reliance on OS fallback fonts (`Arial`, `Microsoft YaHei`): headless Linux CI (`ubuntu-latest`) lacks Windows OS fonts, causing missing characters on WebGL builds and extra runtime atlas allocations locally.
-* Only use **`AtlasPopulationMode.Dynamic`** as an isolated secondary fallback when handling truly unbounded user-entered text or massive CJK scripts, paired with an explicit `clearDynamicDataOnBuild` strategy.
+  * Set **`Atlas Population Mode = Dynamic`** and assign **`sourceFontFile`** (`.otf` / `.ttf`).
+  * **Pre-populate all required glyphs upfront** (`TryAddCharacters`) into a serialized single atlas texture (`Apply(false, false)`).
+  * Set **`isMultiAtlasTexturesEnabled = false`** (`atlasTextures.Length == 1`) and **`PanelTextSettings.clearDynamicDataOnBuild = false`** so pre-baked glyphs survive player/WebGL builds with **0 ms** runtime rasterization.
+* **Strictly forbid `Static` (under ATG) and `DynamicOS`** or reliance on OS fallback fonts (`Arial`, `Microsoft YaHei`): headless Linux CI (`ubuntu-latest`) lacks Windows OS fonts, causing missing characters on WebGL builds and extra runtime atlas allocations locally.
 
 ### 2.4. Font Weights (`fontWeightTable`) vs Synthetic Styles
 * For ultra-low-Draw-Call WebGL2 / mobile panels, leave `fontWeightTable` empty on the primary `FontAsset` and use `-unity-font-style: bold` / `italic` (synthesized cleanly in the SDF shader on the same atlas).
@@ -60,8 +61,8 @@ flowchart LR
 
 ### 2.5. RichText, Symbols & `AllocPage` Discipline
 * Avoid inline `<font="...">` and `<sprite=...>` tags inside hot dynamic labels; each tag switch forces a separate `RenderChainCommand` and `TextureId`.
-* Audit `.uxml` and C# formatters for non-ASCII symbols missing from `FontAsset.characterTable` (e.g., geometric bullets/arrows `●`, `↻`, `■`, `┼`, `▲`, `▼`, `═`, `◢`, `◣`). Either bake those glyphs directly into your primary `Static` `FontAsset` or render icons using ASCII tokens / GPU-batched `MeshGenerationContext.Allocate` geometry.
-* Pair single-atlas `Static` `SDFAA` fonts with `FixedTextSlot` / `FixedSlotLabel` so dynamic HUD numbers and status lines never shift `AllocPage` allocations.
+* Audit `.uxml` and C# formatters for non-ASCII symbols missing from `sourceFontFile` / `FontAsset.characterTable` (e.g., geometric bullets/arrows `●`, `↻`, `■`, `┼`, `▲`, `▼`, `═`, `◢`, `◣`). Keep only natively supported glyphs baked into your primary single atlas, or replace missing symbols with ASCII tokens / GPU-batched `MeshGenerationContext.Allocate` geometry.
+* Pair pre-populated single-atlas `Dynamic` `SDFAA` fonts with `FixedTextSlot` / `FixedSlotLabel` so dynamic HUD numbers and status lines never shift `AllocPage` allocations.
 
 ---
 
@@ -70,14 +71,15 @@ flowchart LR
 ```css
 /* ✅ Standard SUIF USS typography rule */
 .unity-text-element {
+    -unity-font: none;
     -unity-font-definition: url("../Fonts/Primary-Regular SDF.asset");
 }
 ```
 
-1. **Create & Assign `PanelTextSettings`**: Create a `PanelTextSettings` asset (`Assets/Settings/`), assign `defaultFontAsset`, set `enableEmojiSupport = false` unless needed, and wire it into `PanelSettings.textSettings`.
+1. **Create & Assign `PanelTextSettings`**: Create a `PanelTextSettings` asset (`Assets/Settings/`), assign `defaultFontAsset`, set `clearDynamicDataOnBuild = false`, set `enableEmojiSupport = false` unless needed, and wire it into `PanelSettings.textSettings`.
 2. **Audit Non-ASCII Glyphs**: Scan all `.uxml` and C# text formatters for `[^\x00-\x7F]` glyphs and verify every glyph exists in `FontAsset.characterTable`.
-3. **Verify Single Atlas**: Confirm in Unity Inspector / Editor diagnostics that `atlasPopulationMode == Static`, `atlasRenderMode == SDFAA`, `atlasPadding >= 5`, `isMultiAtlasTexturesEnabled == false`, and `atlasTextures.Length == 1`.
-4. **Profile Live Batches**: Verify `UIRenderDevice.GatherDrawStatistics()` (`drawRangeCallCount`) and **UI Toolkit Debugger -> Texture Atlas Viewer** show only 1 primary font atlas and zero OS fallback atlases (`Arial`, `Microsoft YaHei`).
+3. **Verify Single Atlas**: Confirm in Unity Inspector / Editor diagnostics that `atlasPopulationMode == Dynamic`, `sourceFontFile != null`, `atlasRenderMode == SDFAA`, `atlasPadding >= 5`, `isMultiAtlasTexturesEnabled == false`, and `atlasTextures.Length == 1`.
+4. **Profile Live Batches**: Verify `UIRenderDevice.GatherDrawStatistics()` (`drawRangeCallCount`) and **UI Toolkit Debugger -> Texture Atlas Viewer** show only 1 primary font atlas and zero OS fallback atlases (`Arial`, `Microsoft YaHei`) and `0` ATG static-font errors.
 
 ---
 
@@ -85,6 +87,6 @@ flowchart LR
 
 * **NEVER** leave `PanelSettings.textSettings` unassigned (`null`).
 * **NEVER** use `-unity-font` pointing to raw `.ttf`/`.otf` files in runtime USS/TSS.
-* **NEVER** ship UI `FontAsset`s with `atlasPopulationMode = DynamicOS` or `atlasPadding = 0`.
+* **NEVER** ship UI `FontAsset`s with `atlasPopulationMode = Static` (under Unity 6.5+/6.6 ATG), `DynamicOS`, or `atlasPadding = 0`.
 * **NEVER** leave unbaked non-ASCII symbols in UXML/C# that silently trigger OS fallback font atlases.
 * **NEVER** allow more than 2 distinct font atlas textures on screen simultaneously when targeting minimal Draw Calls.
