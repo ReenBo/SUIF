@@ -99,3 +99,8 @@ for (var i = 0; i < windowsList.Count; i++) {
 * **Rule:** Repeated dynamic lists/grids MUST pre-allocate a `FixedElementPool<TElement>` once during `Bind()` rather than recreating elements via `container.Clear()` + `Add()`, and inactive cached views MUST use `DisplayStyle.None` rather than `Visibility.Hidden`.
 * **Why:** Changing text length or DOM geometry forces UI Toolkit to reallocate `AllocPage` vertex buffer slots and split `DrawRange` batches (`12–46 DC` instead of `2–4 DC`).
 * **Full Reference:** See [DTO Standard & Zero-Realloc UI Architecture](DTO_Standard_And_ZeroAlloc_UI.md).
+
+### 10. Single-Atlas SDF Fonts & Explicit `PanelTextSettings`
+* **Rule:** Always assign an explicit `PanelTextSettings` asset (`PanelSettings.textSettings != null`), reference fonts strictly via `-unity-font-definition` pointing to a TextCore `FontAsset`, and use `AtlasPopulationMode.Static` + `GlyphRenderMode.SDFAA` (`atlasPadding` `5–9` px, `isMultiAtlasTexturesEnabled = false`). Strictly forbid `-unity-font`, `atlasPadding == 0`, `DynamicOS`, and OS fallback fonts (`Arial`, `Microsoft YaHei`).
+* **Why:** UI Toolkit's uber-shader has an `8`-texture-slot budget (`TextureSlotManager`). Stray OS fallbacks, multi-atlas overflow, or missing UXML/C# glyphs trigger `KickRangesReason.TextureSlotsExhausted` batch splits locally and break cross-platform WebGL determinism on Linux CI builders.
+* **Full Reference:** See [Font Batching & PanelTextSettings Standard](Font_Batching_And_TextSettings_Standard.md).
